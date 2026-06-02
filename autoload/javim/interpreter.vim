@@ -1,3 +1,6 @@
+let s:save_cpo = &cpo
+set cpo&vim
+
 " autoload/javim/interpreter.vim
 
 function! javim#interpreter#load_class(class_name, vm_state) abort
@@ -6,14 +9,29 @@ function! javim#interpreter#load_class(class_name, vm_state) abort
     return a:vm_state.classes[l:normalized]
   endif
 
-  " 1. Search in native runtime mocks under autoload/javim/rt/
-  let l:rt_func = 'javim#rt#' . substitute(l:normalized, '/', '#', 'g') . '#get'
-  if exists('*' . l:rt_func)
-    let l:class_dict = call(l:rt_func, [])
+  " 0. Handle dynamically created array types (classes starting with '[')
+  if l:normalized[0] ==# '['
+    let l:class_dict = {
+    \   'this_class': l:normalized,
+    \   'super_class': 'java/lang/Object',
+    \   'access_flags': 0x0001,
+    \   'fields': [],
+    \   'methods': {},
+    \ }
     let a:vm_state.classes[l:normalized] = l:class_dict
-    call s_init_static_fields(l:normalized, l:class_dict, a:vm_state)
     return l:class_dict
   endif
+
+  " 1. Search in native runtime mocks under autoload/javim/rt/
+  let l:rt_func = 'javim#rt#' . substitute(l:normalized, '/', '#', 'g') . '#get'
+  try
+    let l:class_dict = call(l:rt_func, [])
+    let a:vm_state.classes[l:normalized] = l:class_dict
+    call s:init_static_fields(l:normalized, l:class_dict, a:vm_state)
+    return l:class_dict
+  catch /^Vim\%((\a\+)\)\=:E117/
+    " Native mock function not found, proceed to classpath
+  endtry
 
   " 2. Search in physical classpath
   for l:dir in a:vm_state.classpath
@@ -21,7 +39,7 @@ function! javim#interpreter#load_class(class_name, vm_state) abort
     if filereadable(l:path)
       let l:class_dict = javim#classfile#parse(l:path)
       let a:vm_state.classes[l:normalized] = l:class_dict
-      call s_init_static_fields(l:normalized, l:class_dict, a:vm_state)
+      call s:init_static_fields(l:normalized, l:class_dict, a:vm_state)
       return l:class_dict
     endif
   endfor
@@ -29,12 +47,12 @@ function! javim#interpreter#load_class(class_name, vm_state) abort
   throw 'ClassNotFoundException: ' . a:class_name
 endfunction
 
-function! s_init_static_fields(class_name, class_dict, vm_state) abort
+function! s:init_static_fields(class_name, class_dict, vm_state) abort
   " Initialize static fields with default values
   for l:f in get(a:class_dict, 'fields', [])
     if and(l:f.access_flags, 0x0008) " ACC_STATIC
       let l:key = a:class_name . '.' . l:f.name
-      let a:vm_state.static_fields[l:key] = s_default_value(l:f.descriptor)
+      let a:vm_state.static_fields[l:key] = s:default_value(l:f.descriptor)
     endif
   endfor
 
@@ -45,7 +63,7 @@ function! s_init_static_fields(class_name, class_dict, vm_state) abort
   endif
 endfunction
 
-function! s_default_value(desc) abort
+function! s:default_value(desc) abort
   if a:desc ==# 'Z'
     return 0 " Boolean false
   elseif a:desc ==# 'I' || a:desc ==# 'B' || a:desc ==# 'C' || a:desc ==# 'S'
@@ -71,7 +89,7 @@ function! javim#interpreter#new_object(class_name, vm_state) abort
     let l:c_dict = javim#interpreter#load_class(l:curr, a:vm_state)
     for l:f in get(l:c_dict, 'fields', [])
       if !and(l:f.access_flags, 0x0008) " Not static
-        let l:fields[l:f.name] = s_default_value(l:f.descriptor)
+        let l:fields[l:f.name] = s:default_value(l:f.descriptor)
       endif
     endfor
     let l:curr = get(l:c_dict, 'super_class', '')
@@ -105,7 +123,7 @@ endfunction
 
 function! javim#interpreter#execute_method(class_name, method_sig, args, vm_state) abort
   let l:c_dict = javim#interpreter#load_class(a:class_name, a:vm_state)
-  let l:method = s_resolve_method(a:class_name, a:method_sig, a:vm_state)
+  let l:method = s:resolve_method(a:class_name, a:method_sig, a:vm_state)
 
   if get(l:method, 'native', 0)
     " Execute direct native Vim Script code hook
@@ -135,7 +153,7 @@ function! javim#interpreter#execute_method(class_name, method_sig, args, vm_stat
   return javim#interpreter#run_loop(l:frame, a:vm_state)
 endfunction
 
-function! s_resolve_method(class_name, method_sig, vm_state) abort
+function! s:resolve_method(class_name, method_sig, vm_state) abort
   let l:curr = a:class_name
   while l:curr !=# ''
     let l:c_dict = javim#interpreter#load_class(l:curr, a:vm_state)
@@ -164,3 +182,7 @@ function! javim#interpreter#run_loop(frame, vm_state) abort
   " Fallback return
   return v:null
 endfunction
+
+
+let &cpo = s:save_cpo
+unlet s:save_cpo

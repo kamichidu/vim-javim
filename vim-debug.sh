@@ -8,9 +8,9 @@ main() {
 
     # Launch Vim with:
     # 1. -u NONE (skips .vimrc / .gvimrc and sets 'compatible' by default)
-    # 2. --cmd "set compatible" (ensures compatible mode is strictly active)
+    # 2. --cmd "set nocompatible" (ensures nocompatible mode is strictly active)
     # 3. -S to source our plugin entry point so :JavimRun is defined
-    exec vim -u NONE --cmd "set compatible" --cmd "set rtp+=${script_dir}" -S "${script_dir}/plugin/javim.vim" "$@"
+    exec vim -u NONE --cmd "set nocompatible" --cmd "set rtp+=${script_dir}" -S "${script_dir}/plugin/javim.vim" "$@"
 }
 
 main "$@"

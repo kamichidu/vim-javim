@@ -1,3 +1,6 @@
+let s:save_cpo = &cpo
+set cpo&vim
+
 " autoload/javim/classfile.vim
 
 function! javim#classfile#parse(filepath) abort
@@ -5,7 +8,7 @@ function! javim#classfile#parse(filepath) abort
     throw 'Classfile not found: ' . a:filepath
   endif
   let l:blob = readfile(a:filepath, 'B')
-  let l:r = s_new_reader(l:blob)
+  let l:r = s:new_reader(l:blob)
 
   let l:magic = l:r.u4()
   if l:magic != 0xCAFEBABE
@@ -16,7 +19,7 @@ function! javim#classfile#parse(filepath) abort
   let l:major = l:r.u2()
 
   let l:cp_count = l:r.u2()
-  let l:cp = s_parse_cp(l:r, l:cp_count)
+  let l:cp = s:parse_cp(l:r, l:cp_count)
 
   let l:flags = l:r.u2()
   let l:this_class_idx = l:r.u2()
@@ -62,7 +65,7 @@ function! javim#classfile#parse(filepath) abort
 
   " Methods
   let l:methods_count = l:r.u2()
-  let l:methods = s_parse_methods(l:r, l:cp, l:methods_count)
+  let l:methods = s:parse_methods(l:r, l:cp, l:methods_count)
 
   return {
   \   'magic': l:magic,
@@ -79,36 +82,36 @@ function! javim#classfile#parse(filepath) abort
 endfunction
 
 " Reader Helpers
-function! s_new_reader(blob) abort
+function! s:new_reader(blob) abort
   return {
   \   'blob': a:blob,
   \   'offset': 0,
-  \   'u1': function('s_read_u1'),
-  \   'u2': function('s_read_u2'),
-  \   'u4': function('s_read_u4'),
-  \   'bytes': function('s_read_bytes'),
+  \   'u1': function('s:read_u1'),
+  \   'u2': function('s:read_u2'),
+  \   'u4': function('s:read_u4'),
+  \   'bytes': function('s:read_bytes'),
   \ }
 endfunction
 
-function! s_read_u1() dict abort
+function! s:read_u1() dict abort
   let l:val = self.blob[self.offset]
   let self.offset += 1
   return l:val
 endfunction
 
-function! s_read_u2() dict abort
+function! s:read_u2() dict abort
   let l:val = (self.blob[self.offset] * 256) + self.blob[self.offset + 1]
   let self.offset += 2
   return l:val
 endfunction
 
-function! s_read_u4() dict abort
+function! s:read_u4() dict abort
   let l:val = (self.blob[self.offset] * 16777216) + (self.blob[self.offset + 1] * 65536) + (self.blob[self.offset + 2] * 256) + self.blob[self.offset + 3]
   let self.offset += 4
   return l:val
 endfunction
 
-function! s_read_bytes(len) dict abort
+function! s:read_bytes(len) dict abort
   let l:res = []
   let l:i = 0
   while l:i < a:len
@@ -120,7 +123,7 @@ function! s_read_bytes(len) dict abort
 endfunction
 
 " Constant Pool Parser
-function! s_parse_cp(r, count) abort
+function! s:parse_cp(r, count) abort
   let l:cp = [{}] " 1-based index
   let l:i = 1
   while l:i < a:count
@@ -193,7 +196,7 @@ function! s_parse_cp(r, count) abort
 endfunction
 
 " Methods Parser
-function! s_parse_methods(r, cp, count) abort
+function! s:parse_methods(r, cp, count) abort
   let l:methods = {}
   let l:i = 0
   while l:i < a:count
@@ -266,3 +269,7 @@ function! s_parse_methods(r, cp, count) abort
   endwhile
   return l:methods
 endfunction
+
+
+let &cpo = s:save_cpo
+unlet s:save_cpo

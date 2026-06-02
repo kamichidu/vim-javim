@@ -1,5 +1,9 @@
+let s:save_cpo = &cpo
+set cpo&vim
+
 " test/run_tests.vim
 set verbose=1
+set rtp+=.
 
 let s:test_files = [
 \   'test/suite/classfile_test.vim',
@@ -30,3 +34,7 @@ else
   echo 'All tests passed successfully!'
   q!
 endif
+
+
+let &cpo = s:save_cpo
+unlet s:save_cpo

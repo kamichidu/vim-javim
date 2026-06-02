@@ -1,3 +1,6 @@
+let s:save_cpo = &cpo
+set cpo&vim
+
 " autoload/javim/native.vim
 
 " Native shared helpers can be added here if needed in the future.
@@ -6,3 +9,7 @@
 function! javim#native#info() abort
   return 'javim native bridge'
 endfunction
+
+
+let &cpo = s:save_cpo
+unlet s:save_cpo

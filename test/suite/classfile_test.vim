@@ -1,6 +1,9 @@
+let s:save_cpo = &cpo
+set cpo&vim
+
 " test/suite/classfile_test.vim
 
-function! s_test_classfile_parse() abort
+function! s:test_classfile_parse() abort
   let l:res = javim#classfile#parse('test/classes/HelloWorld.class')
 
   call assert_equal(0xCAFEBABE, l:res.magic)
@@ -23,4 +26,8 @@ function! s_test_classfile_parse() abort
   endif
 endfunction
 
-call s_test_classfile_parse()
+call s:test_classfile_parse()
+
+
+let &cpo = s:save_cpo
+unlet s:save_cpo

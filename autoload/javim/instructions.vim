@@ -1,28 +1,31 @@
+let s:save_cpo = &cpo
+set cpo&vim
+
 " autoload/javim/instructions.vim
 
-function! s_read_u1(frame) abort
+function! s:read_u1(frame) abort
   let l:val = a:frame.method_code[a:frame.pc]
   let a:frame.pc += 1
   return l:val
 endfunction
 
-function! s_read_u2(frame) abort
+function! s:read_u2(frame) abort
   let l:val = (a:frame.method_code[a:frame.pc] * 256) + a:frame.method_code[a:frame.pc + 1]
   let a:frame.pc += 2
   return l:val
 endfunction
 
-function! s_read_s1(frame) abort
-  let l:val = s_read_u1(a:frame)
+function! s:read_s1(frame) abort
+  let l:val = s:read_u1(a:frame)
   return l:val >= 128 ? l:val - 256 : l:val
 endfunction
 
-function! s_read_s2(frame) abort
-  let l:val = s_read_u2(a:frame)
+function! s:read_s2(frame) abort
+  let l:val = s:read_u2(a:frame)
   return l:val >= 32768 ? l:val - 65536 : l:val
 endfunction
 
-function! s_resolve_methodref(cp, idx) abort
+function! s:resolve_methodref(cp, idx) abort
   let l:ref = a:cp[a:idx]
   let l:class_name = a:cp[a:cp[l:ref.class_index].name_index].val
   let l:nt = a:cp[l:ref.name_and_type_index]
@@ -36,7 +39,7 @@ function! s_resolve_methodref(cp, idx) abort
   \ }
 endfunction
 
-function! s_resolve_fieldref(cp, idx) abort
+function! s:resolve_fieldref(cp, idx) abort
   let l:ref = a:cp[a:idx]
   let l:class_name = a:cp[a:cp[l:ref.class_index].name_index].val
   let l:nt = a:cp[l:ref.name_and_type_index]
@@ -97,15 +100,15 @@ function! javim#instructions#exec(opcode, frame, vm_state) abort
     call add(a:frame.operand_stack, a:opcode - 0x03)
 
   elseif a:opcode == 0x10 " bipush
-    let l:val = s_read_s1(a:frame)
+    let l:val = s:read_s1(a:frame)
     call add(a:frame.operand_stack, l:val)
 
   elseif a:opcode == 0x11 " sipush
-    let l:val = s_read_s2(a:frame)
+    let l:val = s:read_s2(a:frame)
     call add(a:frame.operand_stack, l:val)
 
   elseif a:opcode == 0x12 " ldc
-    let l:idx = s_read_u1(a:frame)
+    let l:idx = s:read_u1(a:frame)
     let l:cp_entry = a:frame.constant_pool[l:idx]
     if l:cp_entry.tag == 1 " UTF8
       let l:ref = javim#interpreter#new_string(l:cp_entry.val, a:vm_state)
@@ -121,11 +124,11 @@ function! javim#instructions#exec(opcode, frame, vm_state) abort
     endif
 
   elseif a:opcode == 0x15 " iload
-    let l:idx = s_read_u1(a:frame)
+    let l:idx = s:read_u1(a:frame)
     call add(a:frame.operand_stack, a:frame.local_variables[l:idx])
 
   elseif a:opcode == 0x19 " aload
-    let l:idx = s_read_u1(a:frame)
+    let l:idx = s:read_u1(a:frame)
     call add(a:frame.operand_stack, a:frame.local_variables[l:idx])
 
   elseif a:opcode >= 0x1a && a:opcode <= 0x1d " iload_0 to iload_3
@@ -137,11 +140,11 @@ function! javim#instructions#exec(opcode, frame, vm_state) abort
     call add(a:frame.operand_stack, a:frame.local_variables[l:idx])
 
   elseif a:opcode == 0x36 " istore
-    let l:idx = s_read_u1(a:frame)
+    let l:idx = s:read_u1(a:frame)
     let a:frame.local_variables[l:idx] = remove(a:frame.operand_stack, -1)
 
   elseif a:opcode == 0x3a " astore
-    let l:idx = s_read_u1(a:frame)
+    let l:idx = s:read_u1(a:frame)
     let a:frame.local_variables[l:idx] = remove(a:frame.operand_stack, -1)
 
   elseif a:opcode >= 0x3b && a:opcode <= 0x3e " istore_0 to istore_3
@@ -180,12 +183,12 @@ function! javim#instructions#exec(opcode, frame, vm_state) abort
     call add(a:frame.operand_stack, l:a / l:b)
 
   elseif a:opcode == 0x84 " iinc
-    let l:idx = s_read_u1(a:frame)
-    let l:const = s_read_s1(a:frame)
+    let l:idx = s:read_u1(a:frame)
+    let l:const = s:read_s1(a:frame)
     let a:frame.local_variables[l:idx] += l:const
 
   elseif a:opcode >= 0x99 && a:opcode <= 0x9e " ifeq, ifne, iflt, ifge, ifgt, ifle
-    let l:offset = s_read_s2(a:frame)
+    let l:offset = s:read_s2(a:frame)
     let l:val = remove(a:frame.operand_stack, -1)
     let l:cond = 0
     if a:opcode == 0x99 | let l:cond = (l:val == 0)
@@ -200,7 +203,7 @@ function! javim#instructions#exec(opcode, frame, vm_state) abort
     endif
 
   elseif a:opcode >= 0x9f && a:opcode <= 0xa4 " if_icmpeq to if_icmple
-    let l:offset = s_read_s2(a:frame)
+    let l:offset = s:read_s2(a:frame)
     let l:b = remove(a:frame.operand_stack, -1)
     let l:a = remove(a:frame.operand_stack, -1)
     let l:cond = 0
@@ -216,7 +219,7 @@ function! javim#instructions#exec(opcode, frame, vm_state) abort
     endif
 
   elseif a:opcode == 0xa7 " goto
-    let l:offset = s_read_s2(a:frame)
+    let l:offset = s:read_s2(a:frame)
     let a:frame.pc = a:frame.pc - 3 + l:offset
 
   elseif a:opcode == 0xac " ireturn
@@ -232,24 +235,24 @@ function! javim#instructions#exec(opcode, frame, vm_state) abort
     let a:frame.return_value = v:null
 
   elseif a:opcode == 0xb2 " getstatic
-    let l:idx = s_read_u2(a:frame)
-    let l:fieldref = s_resolve_fieldref(a:frame.constant_pool, l:idx)
+    let l:idx = s:read_u2(a:frame)
+    let l:fieldref = s:resolve_fieldref(a:frame.constant_pool, l:idx)
     call javim#interpreter#load_class(l:fieldref.class_name, a:vm_state)
     let l:key = l:fieldref.class_name . '.' . l:fieldref.name
     let l:val = get(a:vm_state.static_fields, l:key, 0)
     call add(a:frame.operand_stack, l:val)
 
   elseif a:opcode == 0xb3 " putstatic
-    let l:idx = s_read_u2(a:frame)
-    let l:fieldref = s_resolve_fieldref(a:frame.constant_pool, l:idx)
+    let l:idx = s:read_u2(a:frame)
+    let l:fieldref = s:resolve_fieldref(a:frame.constant_pool, l:idx)
     call javim#interpreter#load_class(l:fieldref.class_name, a:vm_state)
     let l:val = remove(a:frame.operand_stack, -1)
     let l:key = l:fieldref.class_name . '.' . l:fieldref.name
     let a:vm_state.static_fields[l:key] = l:val
 
   elseif a:opcode == 0xb4 " getfield
-    let l:idx = s_read_u2(a:frame)
-    let l:fieldref = s_resolve_fieldref(a:frame.constant_pool, l:idx)
+    let l:idx = s:read_u2(a:frame)
+    let l:fieldref = s:resolve_fieldref(a:frame.constant_pool, l:idx)
     let l:ref = remove(a:frame.operand_stack, -1)
     if type(l:ref) == type({}) && has_key(l:ref, 'null')
       throw 'NullPointerException'
@@ -259,8 +262,8 @@ function! javim#instructions#exec(opcode, frame, vm_state) abort
     call add(a:frame.operand_stack, l:val)
 
   elseif a:opcode == 0xb5 " putfield
-    let l:idx = s_read_u2(a:frame)
-    let l:fieldref = s_resolve_fieldref(a:frame.constant_pool, l:idx)
+    let l:idx = s:read_u2(a:frame)
+    let l:fieldref = s:resolve_fieldref(a:frame.constant_pool, l:idx)
     let l:val = remove(a:frame.operand_stack, -1)
     let l:ref = remove(a:frame.operand_stack, -1)
     if type(l:ref) == type({}) && has_key(l:ref, 'null')
@@ -270,8 +273,8 @@ function! javim#instructions#exec(opcode, frame, vm_state) abort
     let l:obj.__fields__[l:fieldref.name] = l:val
 
   elseif a:opcode == 0xb6 || a:opcode == 0xb7 || a:opcode == 0xb8 " invokevirtual, invokespecial, invokestatic
-    let l:idx = s_read_u2(a:frame)
-    let l:mref = s_resolve_methodref(a:frame.constant_pool, l:idx)
+    let l:idx = s:read_u2(a:frame)
+    let l:mref = s:resolve_methodref(a:frame.constant_pool, l:idx)
 
     let l:args_types = javim#instructions#parse_descriptor(l:mref.descriptor)
     let l:num_args = len(l:args_types)
@@ -306,7 +309,7 @@ function! javim#instructions#exec(opcode, frame, vm_state) abort
     endif
 
   elseif a:opcode == 0xbb " new
-    let l:idx = s_read_u2(a:frame)
+    let l:idx = s:read_u2(a:frame)
     let l:class_entry = a:frame.constant_pool[l:idx]
     let l:class_name = a:frame.constant_pool[l:class_entry.name_index].val
     call javim#interpreter#load_class(l:class_name, a:vm_state)
@@ -317,3 +320,7 @@ function! javim#instructions#exec(opcode, frame, vm_state) abort
     throw 'Unsupported opcode: ' . printf('0x%02x', a:opcode)
   endif
 endfunction
+
+
+let &cpo = s:save_cpo
+unlet s:save_cpo

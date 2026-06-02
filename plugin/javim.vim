@@ -4,9 +4,12 @@ if exists('g:loaded_javim')
 endif
 let g:loaded_javim = 1
 
-command! -nargs=+ JavimRun call s_run_javim(<f-args>)
+let s:save_cpo = &cpo
+set cpo&vim
 
-function! s_run_javim(...) abort
+command! -nargs=+ JavimRun call s:run_javim(<f-args>)
+
+function! s:run_javim(...) abort
   if a:0 == 0
     echoerr 'Usage: JavimRun <class_name> [args...]'
     return
@@ -39,3 +42,6 @@ function! s_run_javim(...) abort
     echoerr 'JVM Runtime Error: ' . v:exception
   endtry
 endfunction
+
+let &cpo = s:save_cpo
+unlet s:save_cpo

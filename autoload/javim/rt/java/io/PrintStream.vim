@@ -1,3 +1,6 @@
+let s:save_cpo = &cpo
+set cpo&vim
+
 " autoload/javim/rt/java/io/PrintStream.vim
 
 function! javim#rt#java#io#PrintStream#get() abort
@@ -9,25 +12,25 @@ function! javim#rt#java#io#PrintStream#get() abort
   \   'methods': {
   \     '<init>()V': {
   \       'native': 1,
-  \       'exec': function('s_init'),
+  \       'exec': function('s:init'),
   \     },
   \     'println(Ljava/lang/String;)V': {
   \       'native': 1,
-  \       'exec': function('s_println_string'),
+  \       'exec': function('s:println_string'),
   \     },
   \     'println(I)V': {
   \       'native': 1,
-  \       'exec': function('s_println_int'),
+  \       'exec': function('s:println_int'),
   \     }
   \   }
   \ }
 endfunction
 
-function! s_init(frame, vm_state) abort
+function! s:init(frame, vm_state) abort
   return v:null
 endfunction
 
-function! s_println_string(frame, vm_state) abort
+function! s:println_string(frame, vm_state) abort
   let l:str_ref = a:frame.local_variables[1]
   let l:str = javim#interpreter#to_vim_string(l:str_ref, a:vm_state)
 
@@ -41,7 +44,7 @@ function! s_println_string(frame, vm_state) abort
   return v:null
 endfunction
 
-function! s_println_int(frame, vm_state) abort
+function! s:println_int(frame, vm_state) abort
   let l:val = a:frame.local_variables[1]
 
   if !has_key(a:vm_state, 'stdout')
@@ -52,3 +55,7 @@ function! s_println_int(frame, vm_state) abort
   echo l:val
   return v:null
 endfunction
+
+
+let &cpo = s:save_cpo
+unlet s:save_cpo

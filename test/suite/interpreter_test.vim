@@ -1,6 +1,9 @@
+let s:save_cpo = &cpo
+set cpo&vim
+
 " test/suite/interpreter_test.vim
 
-function! s_test_hello_world() abort
+function! s:test_hello_world() abort
   let l:vm_state = {
   \   'classes': {},
   \   'heap': {},
@@ -18,7 +21,7 @@ function! s_test_hello_world() abort
   call assert_equal(['Hello, World!'], l:vm_state.stdout)
 endfunction
 
-function! s_test_math_and_loop() abort
+function! s:test_math_and_loop() abort
   let l:vm_state = {
   \   'classes': {},
   \   'heap': {},
@@ -36,5 +39,9 @@ function! s_test_math_and_loop() abort
   call assert_equal(['5', '15'], l:vm_state.stdout)
 endfunction
 
-call s_test_hello_world()
-call s_test_math_and_loop()
+call s:test_hello_world()
+call s:test_math_and_loop()
+
+
+let &cpo = s:save_cpo
+unlet s:save_cpo
