@@ -2,14 +2,15 @@
 
                                  JAVIM                                *javim*
 
-A lightweight JVM interpreter implemented entirely in Vim Script for Vim 8.
+A minimal JVM implementation written in pure Vim Script.
 
 ==============================================================================
 1. INTRODUCTION                                               *javim-intro*
 
-`javim` is a lightweight, pure Vim Script JVM interpreter designed for Vim 8+.
-It reads standard compiled Java bytecode `.class` files, parses their constants,
-fields, interfaces, and bytecode, and executes them in an internal interpreter loop.
+`javim` is a minimal implementation of a Java Virtual Machine (JVM) written in
+pure Vim Script. It runs on Vim 8+ and executes Java
+`.class` bytecode files inside Vim without requiring an external Java Runtime
+Environment (JRE) at runtime.
 
 ==============================================================================
 2. COMMANDS                                                *javim-commands*
@@ -27,15 +28,14 @@ fields, interfaces, and bytecode, and executes them in an internal interpreter l
 ==============================================================================
 3. CONFIGURATION                                          *javim-configuration*
 
-g:javim_cache_dir
+g:javim_cache_dir                                           *g:javim_cache_dir*
                         The root directory used for extracting and caching JAR
                         files. If unset, defaults to "~/.cache/javim".
 
 ==============================================================================
-4. LIMITATIONS                                            *javim-limitations*
+4. LIMITATIONS & COMPATIBILITY                            *javim-limitations*
 
-Due to the pure Vim Script lightweight nature of `javim`, several standard Java SE
-features are explicitly unsupported:
+Besides core JVM spec support, packaging and loading limitations include:
 
 - Project Jigsaw (Java 9+ Module System):
   Module directories and modular flags (--module-path, -p) are unsupported.
@@ -49,7 +49,7 @@ features are explicitly unsupported:
 System Requirements:
 - External `unzip` command is required to extract and parse JAR files.
 
-Note on Supported Classpath Elements:
+Supported Classpath Elements:
 - Directory: Supported (separated by ":" on Unix/macOS, ";" on Windows).
 - JAR File Classpath Entry: Supported via extraction cache (extracted to cache
   directories using external `unzip` command).
@@ -57,6 +57,17 @@ Note on Supported Classpath Elements:
   Note: Unlike standard JREs which strictly match only .jar/.JAR files, javim
   delegates parsing to Vim's native glob() engine, then filters results to
   keep valid directories and .jar files.
+
+------------------------------------------------------------------------------
+For deep-dive compliance details, please refer directly to the specification
+documents under the `docs/` directory of the plugin repository:
+
+- docs/JVMS.md:
+  Java Virtual Machine Specification SE 8 compliance status.
+- docs/OPCODES.md:
+  Verification status of all 1-byte opcodes.
+- docs/API.md:
+  Support matrix of native Java SE standard library mocks.
 
 ==============================================================================
 vim:tw=78:ts=8:ft=help:norl:
