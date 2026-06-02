@@ -67,13 +67,37 @@ let s:start = reltime()
 for s:i in range(s:iter_loop - 1)
   let s:res_val = javim#interpreter#execute_method('test.classes.LoopBenchmark', 'run(I)I', [10000], s:vm_state)
   if s:res_val != 49995000
-    throw 'Benchmark error: LoopBenchmark returned incorrect value: ' . string(s:res_val)
+    throw 'Benchmark error: LoopBenchmark.run returned incorrect value: ' . string(s:res_val)
   endif
 endfor
 let s:elapsed_loop = reltimefloat(reltime(s:start))
 call add(s:results, printf('2. Simple Loop Program Execution:       %.6fs (%d iterations, avg: %.6fs)', s:elapsed_loop, s:iter_loop, s:elapsed_loop / s:iter_loop))
 
-" --- [Measurement 3: Recursive Method Invocation] ---
+" --- [Measurement 3: External Method Entry (No-Args)] ---
+let s:iter_add = 10000
+let s:start = reltime()
+for s:i in range(s:iter_add - 1)
+  let s:res_val = javim#interpreter#execute_method('test.classes.LoopBenchmark', 'add()I', [], s:vm_state)
+  if s:res_val != 3
+    throw 'Benchmark error: LoopBenchmark.add returned incorrect value: ' . string(s:res_val)
+  endif
+endfor
+let s:elapsed_add = reltimefloat(reltime(s:start))
+call add(s:results, printf('3. External Method Entry (No-Args):     %.6fs (%d iterations, avg: %.6fs)', s:elapsed_add, s:iter_add, s:elapsed_add / s:iter_add))
+
+" --- [Measurement 4: Internal Static Method Invocation Loop] ---
+let s:iter_internal = 3
+let s:start = reltime()
+for s:i in range(s:iter_internal - 1)
+  let s:res_val = javim#interpreter#execute_method('test.classes.LoopBenchmark', 'callAddLoop(I)I', [10000], s:vm_state)
+  if s:res_val != 30000
+    throw 'Benchmark error: LoopBenchmark.callAddLoop returned incorrect value: ' . string(s:res_val)
+  endif
+endfor
+let s:elapsed_internal = reltimefloat(reltime(s:start))
+call add(s:results, printf('4. Internal Static Method Invocation Loop: %.6fs (%d iterations, avg: %.6fs)', s:elapsed_internal, s:iter_internal, s:elapsed_internal / s:iter_internal))
+
+" --- [Measurement 5: Recursive Method Invocation] ---
 let s:vm_state_rec = {
 \   'classes': {},
 \   'heap': {},
@@ -91,20 +115,20 @@ for s:i in range(s:iter_rec - 1)
   call javim#interpreter#execute_method('test.classes.Fibonacci', 'fib(I)I', [12], s:vm_state_rec)
 endfor
 let s:elapsed_rec = reltimefloat(reltime(s:start))
-call add(s:results, printf('3. Recursive Method Invocation:         %.6fs (%d iterations, avg: %.6fs)', s:elapsed_rec, s:iter_rec, s:elapsed_rec / s:iter_rec))
+call add(s:results, printf('5. Recursive Method Invocation:         %.6fs (%d iterations, avg: %.6fs)', s:elapsed_rec, s:iter_rec, s:elapsed_rec / s:iter_rec))
 
-" --- [Measurement 4: Classpath Directory Load] ---
+" --- [Measurement 6: Classpath Directory Load] ---
 let s:iter_cp = 1000
 let s:start = reltime()
 for s:i in range(s:iter_cp - 1)
   let s:expanded = javim#interpreter#expand_classpath(['test/classes'])
 endfor
 let s:elapsed_cp = reltimefloat(reltime(s:start))
-call add(s:results, printf('4. Classpath Directory Load:            %.6fs (%d iterations, avg: %.6fs)', s:elapsed_cp, s:iter_cp, s:elapsed_cp / s:iter_cp))
+call add(s:results, printf('6. Classpath Directory Load:            %.6fs (%d iterations, avg: %.6fs)', s:elapsed_cp, s:iter_cp, s:elapsed_cp / s:iter_cp))
 
 " --- [JAR Feature Availability Check] ---
 if executable('unzip')
-  " --- [Measurement 5: JAR Classpath Cold Extraction] ---
+  " --- [Measurement 7: JAR Classpath Cold Extraction] ---
   if isdirectory(g:javim_cache_dir)
     call delete(g:javim_cache_dir, 'rf')
   endif
@@ -112,19 +136,19 @@ if executable('unzip')
   let s:start = reltime()
   let s:expanded = javim#interpreter#expand_classpath(['test/classes/test_hello.jar'])
   let s:elapsed_jar_cold = reltimefloat(reltime(s:start))
-  call add(s:results, printf('5. JAR Classpath Cold Extraction:       %.6fs (1 iteration)', s:elapsed_jar_cold))
+  call add(s:results, printf('7. JAR Classpath Cold Extraction:       %.6fs (1 iteration)', s:elapsed_jar_cold))
 
-  " --- [Measurement 6: JAR Classpath Cache Hit] ---
+  " --- [Measurement 8: JAR Classpath Cache Hit] ---
   let s:iter_hit = 100
   let s:start = reltime()
   for s:i in range(s:iter_hit - 1)
     let s:expanded = javim#interpreter#expand_classpath(['test/classes/test_hello.jar'])
   endfor
   let s:elapsed_jar_hit = reltimefloat(reltime(s:start))
-  call add(s:results, printf('6. JAR Classpath Cache Hit:             %.6fs (%d iterations, avg: %.6fs)', s:elapsed_jar_hit, s:iter_hit, s:elapsed_jar_hit / s:iter_hit))
+  call add(s:results, printf('8. JAR Classpath Cache Hit:             %.6fs (%d iterations, avg: %.6fs)', s:elapsed_jar_hit, s:iter_hit, s:elapsed_jar_hit / s:iter_hit))
 else
-  call add(s:results, '5. JAR Classpath Cold Extraction:       SKIP (unzip not found)')
-  call add(s:results, '6. JAR Classpath Cache Hit:             SKIP (unzip not found)')
+  call add(s:results, '7. JAR Classpath Cold Extraction:       SKIP (unzip not found)')
+  call add(s:results, '8. JAR Classpath Cache Hit:             SKIP (unzip not found)')
 endif
 
 call add(s:results, '============================================================')
