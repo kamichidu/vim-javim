@@ -1,4 +1,4 @@
-# `javim` (vim-jre) Project Instructions & Conventions
+# `javim` Project Instructions & Conventions
 
 This document contains repo-wide architectural guidelines, development workflows, and coding conventions for maintaining the pure Vim Script JVM implementation.
 
