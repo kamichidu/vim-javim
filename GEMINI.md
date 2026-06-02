@@ -71,3 +71,33 @@ The headless testing framework runs via:
 vim -u NONE -S test/run_tests.vim
 ```
 This script appends `.` (repository root) to the `'runtimepath'` to resolve autoload dependencies and runs all test suites non-interactively, returning an exit code of `0` on success, or logging test failures to standard output/logs and exiting with `cquit!` (non-zero) on error.
+
+---
+
+## Documentation & Specification Maintenance Policy
+
+To maintain a clear and accurate understanding of the interpreter's compliance status, we maintain three hand-managed specification and compatibility documents under the `docs/` folder:
+
+1. **`docs/JVMS.md`**: Tracks compatibility against the *Java Virtual Machine Specification, Java SE 8 Edition (JVMS SE 8)*, covering binary class formats, constant pool tags, attributes, descriptors, runtime areas, stacks, and method invocation boundaries.
+2. **`docs/OPCODES.md`**: A manually updated listing of the entire 1-byte opcode space (`0x00` to `0xff`).
+3. **`docs/API.md`**: A compatibility matrix tracking the native stubs for the standard library (`java.lang.Object`, `java.lang.String`, `java.lang.System`, `java.io.PrintStream`).
+
+### Guidelines for Document Updates (Hand-Managed)
+
+Every time an opcode, classfile parsing feature, or Java SE API stub method is implemented, modified, or verified, the corresponding document must be updated by hand according to these rules:
+
+#### 1. Ground Truth
+* **Implementation Ground Truth**: The actual code in the interpreter (`autoload/javim/interpreter.vim` and `autoload/javim/instructions.vim`) is the absolute source of truth for support status.
+* **Test Verification Ground Truth**: The test suites in the `test/` directory are the absolute source of truth for verification status.
+
+#### 2. Status Definitions
+When updating status fields, always use one of these six unified terms:
+* `supported`: Fully implemented and verified.
+* `partial`: Partially implemented (e.g., missing specific method overloads or edge-case constraints).
+* `unsupported`: Not supported/unimplemented.
+* `out-of-scope`: Intentionally excluded from the project scope (e.g., JIT compilation, GC strategies, native thread scheduling, or multi-threading monitor instructions like `monitorenter` and `monitorexit`).
+* `reserved`: Reserved by the JVMS SE 8 specification (e.g., `0xca` for `breakpoint` and `0xfe` / `0xff` for `impdep`).
+* `unknown`: Unverified/status unknown.
+
+#### 3. Test Column Verification
+In `docs/OPCODES.md` and `docs/API.md`, the `test` column must specify precisely which test suite class verifies the item (e.g., `pass(HelloWorld)`, `pass(MathTest)`, `pass(Fibonacci)`). If no specific automated test executes the path, it must be marked as `none` (or `n/a` for reserved/out-of-scope items). Avoid vague or generic `pass` claims.
