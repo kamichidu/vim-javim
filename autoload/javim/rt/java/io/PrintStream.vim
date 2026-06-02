@@ -1,7 +1,7 @@
+" autoload/javim/rt/java/io/PrintStream.vim
+
 let s:save_cpo = &cpo
 set cpo&vim
-
-" autoload/javim/rt/java/io/PrintStream.vim
 
 function! javim#rt#java#io#PrintStream#get() abort
   return {

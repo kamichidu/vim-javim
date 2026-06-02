@@ -1,7 +1,7 @@
+" test/suite/classfile_test.vim
+
 let s:save_cpo = &cpo
 set cpo&vim
-
-" test/suite/classfile_test.vim
 
 function! s:test_classfile_parse() abort
   let l:res = javim#classfile#parse('test/classes/HelloWorld.class')

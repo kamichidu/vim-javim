@@ -1,7 +1,7 @@
+" test/suite/interpreter_test.vim
+
 let s:save_cpo = &cpo
 set cpo&vim
-
-" test/suite/interpreter_test.vim
 
 function! s:test_hello_world() abort
   let l:vm_state = {

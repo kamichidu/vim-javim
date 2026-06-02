@@ -1,7 +1,7 @@
+" test/run_tests.vim
+
 let s:save_cpo = &cpo
 set cpo&vim
-
-" test/run_tests.vim
 set verbose=1
 set rtp+=.
 

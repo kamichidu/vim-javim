@@ -1,7 +1,7 @@
+" autoload/javim/rt/java/lang/StringBuilder.vim
+
 let s:save_cpo = &cpo
 set cpo&vim
-
-" autoload/javim/rt/java/lang/StringBuilder.vim
 
 function! javim#rt#java#lang#StringBuilder#get() abort
   return {

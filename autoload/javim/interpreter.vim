@@ -1,7 +1,7 @@
+" autoload/javim/interpreter.vim
+
 let s:save_cpo = &cpo
 set cpo&vim
-
-" autoload/javim/interpreter.vim
 
 let s:OP_FUSED_BASE = 0x10000
 let s:OP_FUSED_IADD_LOCAL = s:OP_FUSED_BASE + 1 " Fused (iload_1, iload_2, iadd, istore_1)

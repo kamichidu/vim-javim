@@ -1,7 +1,7 @@
+" autoload/javim/rt/java/lang/Object.vim
+
 let s:save_cpo = &cpo
 set cpo&vim
-
-" autoload/javim/rt/java/lang/Object.vim
 
 function! javim#rt#java#lang#Object#get() abort
   return {

@@ -1,7 +1,8 @@
+" test/run_benchmarks.vim
+
 let s:save_cpo = &cpo
 set cpo&vim
 
-" test/run_benchmarks.vim
 set verbose=1
 set rtp+=.
 

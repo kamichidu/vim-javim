@@ -1,7 +1,7 @@
+" autoload/javim/classfile.vim
+
 let s:save_cpo = &cpo
 set cpo&vim
-
-" autoload/javim/classfile.vim
 
 function! javim#classfile#parse(filepath) abort
   if !filereadable(a:filepath)

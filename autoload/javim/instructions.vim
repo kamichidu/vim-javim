@@ -1,7 +1,7 @@
+" autoload/javim/instructions.vim
+
 let s:save_cpo = &cpo
 set cpo&vim
-
-" autoload/javim/instructions.vim
 
 function! s:read_u1(frame) abort
   let l:val = a:frame.method_code[a:frame.pc]
