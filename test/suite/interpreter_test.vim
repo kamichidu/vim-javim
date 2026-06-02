@@ -122,6 +122,22 @@ function! s:test_cache_dir_configuration() abort
   unlet g:javim_cache_dir
 endfunction
 
+function! s:test_javim_run() abort
+  " Test standard javim#run call with classpath
+  try
+    call javim#run('-cp', '.', 'test.classes.HelloWorld')
+  catch
+    call assert_false(1, 'javim#run failed: ' . v:exception)
+  endtry
+
+  " Test javim#run with no classpath (defaults to '.')
+  try
+    call javim#run('test.classes.HelloWorld')
+  catch
+    call assert_false(1, 'javim#run without -cp failed: ' . v:exception)
+  endtry
+endfunction
+
 call s:test_hello_world()
 call s:test_math_and_loop()
 call s:test_fibonacci()
@@ -129,6 +145,7 @@ call s:test_custom_classpath()
 call s:test_jar_classpath()
 call s:test_wildcard_classpath()
 call s:test_cache_dir_configuration()
+call s:test_javim_run()
 
 
 let &cpo = s:save_cpo

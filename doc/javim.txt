@@ -26,7 +26,25 @@ Environment (JRE) at runtime.
                         :JavimRun -cp bin:lib test.classes.HelloWorld
 <
 ==============================================================================
-3. CONFIGURATION                                          *javim-configuration*
+3. FUNCTIONS                                                    *javim-functions*
+
+javim#run({args}...)                                                *javim#run()*
+                        Executes the specified Java class programmatically.
+                        This function accepts arguments equivalent to the
+                        command-line arguments of `:JavimRun` command.
+                        It enables running the JVM execution directly from
+                        other Vim scripts and functions.
+
+                        Example:
+>
+                        " Execute class with custom classpath
+                        call javim#run('-cp', 'bin', 'com.example.Main')
+
+                        " Execute class in the current directory with args
+                        call javim#run('com.example.Echo', 'arg1', 'arg2')
+<
+==============================================================================
+4. CONFIGURATION                                          *javim-configuration*
 
 g:javim_cache_dir                                           *g:javim_cache_dir*
                         The root directory used for extracting and caching JAR
