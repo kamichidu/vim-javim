@@ -7,8 +7,8 @@ This document contains repo-wide architectural guidelines, development workflows
 The JVM is designed as a modular interpreter running entirely inside Vim 8 (excluding Neovim support).
 
 1. **Bytecode Decoder (`autoload/javim/classfile.vim`):** Reads Java bytecode `.class` files as a binary `Blob` using Vim 8 `readfile(..., 'B')` and parses constant pools, interfaces, fields, methods, and the `Code` attribute.
-2. **Interpreter (`autoload/javim/interpreter.vim`):** Manages stack frames, JVM heap allocation, static fields, and method invocations.
-3. **Instruction Set (`autoload/javim/instructions.vim`):** Implements JVM opcodes (arithmetic, object instantiations, loops, branch jumps, static/dynamic method dispatch).
+2. **Interpreter & Predecoder (`autoload/javim/interpreter.vim`):** Manages stack frames, JVM heap allocation, static fields, and method invocations. To ensure maximum execution speed, methods are **predecoded** once prior to execution. The original bytecode is converted into a non-destructive `instructions` stream object array, with jump targets pre-resolved via a `pc_to_ip` map. It also dynamically injects Superinstructions using an internal extended opcode space (`>= 0x10000`).
+3. **Instruction Set (`autoload/javim/instructions.vim`):** Implements standard JVMS opcodes (`0x00` to `0xff`). The execution loop operates over the predecoded instruction index (`ip`) rather than sequential byte-reading.
 4. **Vim-Native Standard Library (`autoload/javim/rt/`):** Bypasses the need for real compiled `rt.jar` class files. Standard Java runtime classes (like `java.lang.Object`, `java.lang.String`, `java.lang.System`, and `java.io.PrintStream`) are mocked directly in Vim Script, exposing pre-configured `ClassDict` structures with native Vim callback mappings.
 
 ---
@@ -17,9 +17,11 @@ The JVM is designed as a modular interpreter running entirely inside Vim 8 (excl
 
 All new and modified Vim Script files in this repository must strictly adhere to the following standards:
 
-### 1. Compatibility Guard (cpoptions)
-Every single `.vim` file under both `plugin/`, `autoload/`, and `test/` must be wrapped with the standard `'cpoptions'` (`cpo`) save and restore block to prevent line continuation (`\`) syntax errors in strict or unconfigured environments:
+### 1. File Header and Compatibility Guard
+Every single `.vim` file under `plugin/`, `autoload/`, and `test/` must place its file path comment at the absolute top (line 1), followed immediately by the standard `'cpoptions'` (`cpo`) save and restore block. This ensures a clean, unified, and professional file structure while preventing line continuation (`\`) syntax errors:
 ```vim
+" autoload/javim/example.vim
+
 let s:save_cpo = &cpo
 set cpo&vim
 
