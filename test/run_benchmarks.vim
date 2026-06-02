@@ -50,6 +50,7 @@ let s:elapsed_parse = reltimefloat(reltime(s:start))
 call add(s:results, printf('1. Classfile Parse:                     %.6fs (%d iterations, avg: %.6fs)', s:elapsed_parse, s:iter_parse, s:elapsed_parse / s:iter_parse))
 
 " --- [Measurement 2: Simple Loop Program Execution] ---
+" Measured in the unified production path with both Predecode and Fused Superinstructions enabled.
 let s:vm_state = {
 \   'classes': {},
 \   'heap': {},
@@ -58,10 +59,13 @@ let s:vm_state = {
 \   'classpath': ['.'],
 \   'stdout': [],
 \ }
-" Load safely without warnings and without swallowing real syntax/runtime errors
-call s:load_class_silently('test.classes.LoopBenchmark', s:vm_state)
+let s:c_dict = s:load_class_silently('test.classes.LoopBenchmark', s:vm_state)
+let s:method = s:c_dict.methods['run(I)I']
+if has_key(s:method, 'instructions')
+  unlet s:method.instructions
+  unlet s:method.pc_to_ip
+endif
 
-" Run 3 times to get a stable average time, executing run(I)I directly to prevent printing standard output
 let s:iter_loop = 3
 let s:start = reltime()
 for s:i in range(s:iter_loop - 1)
@@ -71,7 +75,8 @@ for s:i in range(s:iter_loop - 1)
   endif
 endfor
 let s:elapsed_loop = reltimefloat(reltime(s:start))
-call add(s:results, printf('2. Simple Loop Program Execution:       %.6fs (%d iterations, avg: %.6fs)', s:elapsed_loop, s:iter_loop, s:elapsed_loop / s:iter_loop))
+let s:avg_loop = s:elapsed_loop / s:iter_loop
+call add(s:results, printf('2. Simple Loop Program Execution:       %.6fs (%d iterations, avg: %.6fs)', s:elapsed_loop, s:iter_loop, s:avg_loop))
 
 " --- [Measurement 3: External Method Entry (No-Args)] ---
 let s:iter_add = 10000

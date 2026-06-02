@@ -86,7 +86,7 @@ function! javim#instructions#parse_descriptor(desc) abort
   return l:args
 endfunction
 
-function! javim#instructions#exec(opcode, frame, vm_state) abort
+function! javim#instructions#exec(opcode, inst, frame, vm_state) abort
   if a:opcode == 0x00 " nop
     " Do nothing
 
@@ -183,12 +183,10 @@ function! javim#instructions#exec(opcode, frame, vm_state) abort
     call add(a:frame.operand_stack, l:a / l:b)
 
   elseif a:opcode == 0x84 " iinc
-    let l:idx = s:read_u1(a:frame)
-    let l:const = s:read_s1(a:frame)
-    let a:frame.local_variables[l:idx] += l:const
+    let a:frame.local_variables[a:inst.index] += a:inst.const
+    let a:frame.pc = a:inst.next_pc
 
   elseif a:opcode >= 0x99 && a:opcode <= 0x9e " ifeq, ifne, iflt, ifge, ifgt, ifle
-    let l:offset = s:read_s2(a:frame)
     let l:val = remove(a:frame.operand_stack, -1)
     let l:cond = 0
     if a:opcode == 0x99 | let l:cond = (l:val == 0)
@@ -199,11 +197,12 @@ function! javim#instructions#exec(opcode, frame, vm_state) abort
     elseif a:opcode == 0x9e | let l:cond = (l:val <= 0)
     endif
     if l:cond
-      let a:frame.pc = a:frame.pc - 3 + l:offset
+      let a:frame.pc = a:inst.target_pc
+    else
+      let a:frame.pc = a:inst.next_pc
     endif
 
   elseif a:opcode >= 0x9f && a:opcode <= 0xa4 " if_icmpeq to if_icmple
-    let l:offset = s:read_s2(a:frame)
     let l:b = remove(a:frame.operand_stack, -1)
     let l:a = remove(a:frame.operand_stack, -1)
     let l:cond = 0
@@ -215,12 +214,13 @@ function! javim#instructions#exec(opcode, frame, vm_state) abort
     elseif a:opcode == 0xa4 | let l:cond = (l:a <= l:b)
     endif
     if l:cond
-      let a:frame.pc = a:frame.pc - 3 + l:offset
+      let a:frame.pc = a:inst.target_pc
+    else
+      let a:frame.pc = a:inst.next_pc
     endif
 
   elseif a:opcode == 0xa7 " goto
-    let l:offset = s:read_s2(a:frame)
-    let a:frame.pc = a:frame.pc - 3 + l:offset
+    let a:frame.pc = a:inst.target_pc
 
   elseif a:opcode == 0xac " ireturn
     let a:frame.returned = 1
