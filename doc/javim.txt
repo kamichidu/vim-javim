@@ -14,12 +14,29 @@ fields, interfaces, and bytecode, and executes them in an internal interpreter l
 ==============================================================================
 2. COMMANDS                                                *javim-commands*
 
-:JavimRun {class_name} [args...]
+:JavimRun [-cp {classpath}] {class_name} [args...]
                         Executes the main method of the specified Java class
-                        from the current directory or classpath.
+                        from the current directory or specified classpath.
+                        Multiple path elements in {classpath} are separated
+                        by system-specific delimiters (":" on macOS/Linux,
+                        ";" on Windows).
                         Example:
 >
-                        :JavimRun test.classes.HelloWorld
+                        :JavimRun -cp bin:lib test.classes.HelloWorld
 <
+==============================================================================
+3. LIMITATIONS                                            *javim-limitations*
+
+Due to the pure Vim Script lightweight nature of `javim`, several standard Java SE
+features are explicitly unsupported:
+
+- Project Jigsaw (Java 9+ Module System):
+  Module directories and modular flags (--module-path, -p) are unsupported.
+  All classes must reside on a flat classpath.
+
+- JAR Manifest (Class-Path):
+  Execution via JAR manifests (including the "Class-Path" header inside
+  META-INF/MANIFEST.MF) is unsupported.
+
 ==============================================================================
 vim:tw=78:ts=8:ft=help:norl:

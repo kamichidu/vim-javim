@@ -11,11 +11,26 @@ command! -nargs=+ JavimRun call s:run_javim(<f-args>)
 
 function! s:run_javim(...) abort
   if a:0 == 0
-    echoerr 'Usage: JavimRun <class_name> [args...]'
+    echoerr 'Usage: JavimRun [-cp <classpath>] <class_name> [args...]'
     return
   endif
-  let l:class_name = a:1
-  let l:args = a:0 > 1 ? a:000[1:] : []
+
+  let l:classpath = ['.']
+  let l:class_idx = 1
+
+  if a:1 ==# '-cp' || a:1 ==# '-classpath'
+    if a:0 < 3
+      echoerr 'Usage: JavimRun [-cp <classpath>] <class_name> [args...]'
+      return
+    endif
+    let l:cp_str = a:2
+    let l:sep = (has('win32') || has('win64')) ? ';' : ':'
+    let l:classpath = split(l:cp_str, l:sep)
+    let l:class_idx = 3
+  endif
+
+  let l:class_name = a:000[l:class_idx - 1]
+  let l:args = a:0 > l:class_idx ? a:000[l:class_idx :] : []
 
   " Create a clean, isolated VM state
   let l:vm_state = {
@@ -23,7 +38,7 @@ function! s:run_javim(...) abort
   \   'heap': {},
   \   'next_object_id': 1,
   \   'static_fields': {},
-  \   'classpath': ['.'],
+  \   'classpath': l:classpath,
   \ }
 
   " Map arguments to String references inside the JVM

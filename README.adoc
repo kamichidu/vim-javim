@@ -70,8 +70,19 @@ javac HelloWorld.java
 +
 [source,vim]
 ----
+" Run from current directory (default)
 :JavimRun HelloWorld
+
+" Run with a custom classpath (colon ':' on macOS/Linux, semicolon ';' on Windows)
+:JavimRun -cp bin:lib HelloWorld
 ----
+
+== Limitations & Compatibility
+
+`javim` is a lightweight, pure Vim Script interpreter designed strictly around the Java Virtual Machine Specification, Java SE 8 Edition (JVMS SE 8). Therefore, many modern or advanced Java deployment and packaging capabilities are explicitly **unsupported**:
+
+Project Jigsaw (Java 9+ Module System):: Explicitly **unsupported**. Modular directory structure and module-path command-line flags (`--module-path` or `-p`) are completely ignored. All class files must reside on a flat classpath structure.
+JAR Manifest (`Class-Path` header):: Explicitly **unsupported**. JAR execution with `java -jar` or classpath resolution based on the `Class-Path` configuration inside a JAR's `META-INF/MANIFEST.MF` is not supported.
 
 == Troubleshooting
 

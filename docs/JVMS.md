@@ -127,6 +127,12 @@ The lifecycle of class definitions inside the virtual machine.
 - **Linking**: `partial`. Bypasses formal binary verification. Initializes static fields with their default JVM representation (e.g. `0` for `I`, `{'null': 1}` for objects) during loading.
 - **Initialization**: `supported`. Automatically runs class initializers (`<clinit>()V`) in isolation upon class loading.
 
+### Classpath & Loader Limitations
+
+- **Project Jigsaw (Module System)**: `unsupported`. Java 9+ module-path features (`--module-path`, `-p`) are explicitly unsupported. Only the classic flat classpath lookup is utilized.
+- **JAR Manifest (`Class-Path`)**: `unsupported`. Reading or resolving dependencies listed in the `Class-Path` header of `MANIFEST.MF` is explicitly unsupported.
+- **Classpath Specification (`-cp` / `-classpath`)**: `supported`. You can configure physical classpaths for `:JavimRun` using `-cp` or `-classpath` arguments. Multiple directories or paths are separated by system-specific delimiters (`:` on UNIX/macOS, `;` on Windows), matching standard `java -cp` behavior. When omitted, it defaults to `['.']` (the current working directory).
+
 ---
 
 ## 11. Instruction Categories
