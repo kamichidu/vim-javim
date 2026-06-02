@@ -183,6 +183,76 @@ function! javim#interpreter#run_loop(frame, vm_state) abort
   return v:null
 endfunction
 
+function! javim#interpreter#expand_classpath(classpath) abort
+  let l:expanded = []
+
+  for l:entry in a:classpath
+    " Handle empty entry or current dir shorthand
+    let l:raw_entry = l:entry ==# '' ? '.' : l:entry
+
+    " 1. Check if the entry contains a wildcard '*'
+    if l:raw_entry =~# '\*'
+      " Expand wildcard using Vim's glob()
+      let l:matches = glob(l:raw_entry, 0, 1)
+      for l:m in l:matches
+        let l:abs_m = fnamemodify(l:m, ':p')
+        call s:process_single_entry(l:abs_m, l:expanded)
+      endfor
+    else
+      let l:abs_entry = fnamemodify(l:raw_entry, ':p')
+      if l:abs_entry !=# '/' && l:abs_entry[-1:] ==# '/'
+        let l:abs_entry = l:abs_entry[:-2]
+      endif
+      call s:process_single_entry(l:abs_entry, l:expanded)
+    endif
+  endfor
+
+  return l:expanded
+endfunction
+
+function! s:process_single_entry(path, result_list) abort
+  if isdirectory(a:path)
+    " It's a directory, add it directly if not already in list
+    if index(a:result_list, a:path) == -1
+      call add(a:result_list, a:path)
+    endif
+  elseif filereadable(a:path) && a:path =~? '\.jar$'
+    " It's a JAR file, extract and cache it
+    let l:cache_dir = s:extract_jar(a:path)
+    if l:cache_dir !=# '' && index(a:result_list, l:cache_dir) == -1
+      call add(a:result_list, l:cache_dir)
+    endif
+  endif
+endfunction
+
+function! s:extract_jar(jar_path) abort
+  if !executable('unzip')
+    throw 'unzip command not found. Please install unzip to load classes from JAR files.'
+  endif
+
+  let l:mtime = getftime(a:jar_path)
+  let l:size = getfsize(a:jar_path)
+  let l:cache_key_input = a:jar_path . ':' . l:mtime . ':' . l:size
+  let l:hash = sha256(l:cache_key_input)
+
+  let l:cache_root = get(g:, 'javim_cache_dir', expand('~/.cache/javim'))
+  let l:jar_cache_dir = l:cache_root . '/' . l:hash
+
+  if !isdirectory(l:jar_cache_dir)
+    " Create cache directory
+    call mkdir(l:jar_cache_dir, 'p')
+    " Extract using external unzip command
+    let l:cmd = 'unzip -q -o ' . shellescape(a:jar_path) . ' -d ' . shellescape(l:jar_cache_dir)
+    call system(l:cmd)
+    if v:shell_error != 0
+      echoerr 'Failed to extract JAR file: ' . a:jar_path
+      return ''
+    endif
+  endif
+
+  return l:jar_cache_dir
+endfunction
+
 
 let &cpo = s:save_cpo
 unlet s:save_cpo

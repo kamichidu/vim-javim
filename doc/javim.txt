@@ -25,18 +25,38 @@ fields, interfaces, and bytecode, and executes them in an internal interpreter l
                         :JavimRun -cp bin:lib test.classes.HelloWorld
 <
 ==============================================================================
-3. LIMITATIONS                                            *javim-limitations*
+3. CONFIGURATION                                          *javim-configuration*
+
+g:javim_cache_dir
+                        The root directory used for extracting and caching JAR
+                        files. If unset, defaults to "~/.cache/javim".
+
+==============================================================================
+4. LIMITATIONS                                            *javim-limitations*
 
 Due to the pure Vim Script lightweight nature of `javim`, several standard Java SE
 features are explicitly unsupported:
 
 - Project Jigsaw (Java 9+ Module System):
   Module directories and modular flags (--module-path, -p) are unsupported.
-  All classes must reside on a flat classpath.
 
 - JAR Manifest (Class-Path):
-  Execution via JAR manifests (including the "Class-Path" header inside
-  META-INF/MANIFEST.MF) is unsupported.
+  Automatic resolution and dependent loading of paths listed in the "Class-Path"
+  header inside a JAR's META-INF/MANIFEST.MF is unsupported. Only classes
+  contained directly inside specified directories or JARs are loaded.
+
+------------------------------------------------------------------------------
+System Requirements:
+- External `unzip` command is required to extract and parse JAR files.
+
+Note on Supported Classpath Elements:
+- Directory: Supported (separated by ":" on Unix/macOS, ";" on Windows).
+- JAR File Classpath Entry: Supported via extraction cache (extracted to cache
+  directories using external `unzip` command).
+- Wildcard (*): Supported (expanded at startup using Vim's built-in `glob()`).
+  Note: Unlike standard JREs which strictly match only .jar/.JAR files, javim
+  delegates parsing to Vim's native glob() engine, then filters results to
+  keep valid directories and .jar files.
 
 ==============================================================================
 vim:tw=78:ts=8:ft=help:norl:

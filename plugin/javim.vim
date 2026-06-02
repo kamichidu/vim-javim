@@ -32,13 +32,15 @@ function! s:run_javim(...) abort
   let l:class_name = a:000[l:class_idx - 1]
   let l:args = a:0 > l:class_idx ? a:000[l:class_idx :] : []
 
+  let l:expanded_classpath = javim#interpreter#expand_classpath(l:classpath)
+
   " Create a clean, isolated VM state
   let l:vm_state = {
   \   'classes': {},
   \   'heap': {},
   \   'next_object_id': 1,
   \   'static_fields': {},
-  \   'classpath': l:classpath,
+  \   'classpath': l:expanded_classpath,
   \ }
 
   " Map arguments to String references inside the JVM

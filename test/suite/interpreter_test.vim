@@ -71,10 +71,64 @@ function! s:test_custom_classpath() abort
   call assert_equal('test/classes/HelloWorld', l:class_dict.this_class)
 endfunction
 
+function! s:test_jar_classpath() abort
+  let l:expanded = javim#interpreter#expand_classpath(['test/classes/test_hello.jar'])
+  call assert_equal(1, len(l:expanded))
+  call assert_match('\.cache/javim/', l:expanded[0])
+  call assert_true(isdirectory(l:expanded[0]))
+
+  let l:vm_state = {
+  \   'classes': {},
+  \   'heap': {},
+  \   'next_object_id': 1,
+  \   'static_fields': {},
+  \   'classpath': l:expanded,
+  \   'stdout': [],
+  \ }
+
+  let l:class_dict = javim#interpreter#load_class('test.classes.HelloWorld', l:vm_state)
+  call assert_equal('test/classes/HelloWorld', l:class_dict.this_class)
+endfunction
+
+function! s:test_wildcard_classpath() abort
+  let l:expanded = javim#interpreter#expand_classpath(['test/classes/*.jar'])
+  call assert_equal(1, len(l:expanded))
+  call assert_match('\.cache/javim/', l:expanded[0])
+  call assert_true(isdirectory(l:expanded[0]))
+
+  let l:vm_state = {
+  \   'classes': {},
+  \   'heap': {},
+  \   'next_object_id': 1,
+  \   'static_fields': {},
+  \   'classpath': l:expanded,
+  \   'stdout': [],
+  \ }
+
+  let l:class_dict = javim#interpreter#load_class('test.classes.HelloWorld', l:vm_state)
+  call assert_equal('test/classes/HelloWorld', l:class_dict.this_class)
+endfunction
+
+function! s:test_cache_dir_configuration() abort
+  let g:javim_cache_dir = expand('~/.cache/javim_test_custom')
+  let l:expanded = javim#interpreter#expand_classpath(['test/classes/test_hello.jar'])
+  call assert_equal(1, len(l:expanded))
+  call assert_match('javim_test_custom', l:expanded[0])
+  call assert_true(isdirectory(l:expanded[0]))
+  
+  if isdirectory(g:javim_cache_dir)
+    call delete(g:javim_cache_dir, 'rf')
+  endif
+  unlet g:javim_cache_dir
+endfunction
+
 call s:test_hello_world()
 call s:test_math_and_loop()
 call s:test_fibonacci()
 call s:test_custom_classpath()
+call s:test_jar_classpath()
+call s:test_wildcard_classpath()
+call s:test_cache_dir_configuration()
 
 
 let &cpo = s:save_cpo

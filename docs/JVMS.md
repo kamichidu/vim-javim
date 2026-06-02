@@ -127,11 +127,23 @@ The lifecycle of class definitions inside the virtual machine.
 - **Linking**: `partial`. Bypasses formal binary verification. Initializes static fields with their default JVM representation (e.g. `0` for `I`, `{'null': 1}` for objects) during loading.
 - **Initialization**: `supported`. Automatically runs class initializers (`<clinit>()V`) in isolation upon class loading.
 
-### Classpath & Loader Limitations
+### Classpath & Loader Support Matrix
 
-- **Project Jigsaw (Module System)**: `unsupported`. Java 9+ module-path features (`--module-path`, `-p`) are explicitly unsupported. Only the classic flat classpath lookup is utilized.
-- **JAR Manifest (`Class-Path`)**: `unsupported`. Reading or resolving dependencies listed in the `Class-Path` header of `MANIFEST.MF` is explicitly unsupported.
-- **Classpath Specification (`-cp` / `-classpath`)**: `supported`. You can configure physical classpaths for `:JavimRun` using `-cp` or `-classpath` arguments. Multiple directories or paths are separated by system-specific delimiters (`:` on UNIX/macOS, `;` on Windows), matching standard `java -cp` behavior. When omitted, it defaults to `['.']` (the current working directory).
+We support classloading from classic classpaths. Below is the detailed support matrix for different classpath entry types:
+
+| Entry Type | Status | Detailed Support Scope & Behavior |
+| :--- | :--- | :--- |
+| **directory** | `supported` | Looks up `.class` files sequentially under specified directory structures. Multiple directories can be separated by system-specific delimiters (`:` on Unix/macOS, `;` on Windows). |
+| **jar file classpath entry** | `supported via extraction cache` | Direct `.jar` file paths can be specified. It extracts the JAR archive into cache directories using the external `unzip` command, and loads classes from the extracted directory. Requires the external `unzip` executable to be installed. |
+| **wildcard** | `supported` | Wildcard patterns (e.g. `lib/*`) are expanded at startup using Vim's built-in `glob()` function. Unlike standard JREs (which strictly match only `.jar`/`.JAR` files under the folder), `javim` delegates to Vim's native globbing engine. Any resulting matches are then filtered to keep only valid directories and `.jar` files for classloading. |
+| **manifest Class-Path** | `unsupported` | Automatic resolution and dependent loading of paths listed in the `Class-Path` header inside a JAR's `MANIFEST.MF` is explicitly unsupported. Only direct contents of the specified JAR are loaded. |
+| **module-path** (Jigsaw) | `unsupported` | Java 9+ modular directories and module-path command-line flags (`--module-path` or `-p`) are explicitly unsupported. |
+
+- **Classpath Specification (`-cp` / `-classpath`)**: `supported`. You can configure physical classpaths for `:JavimRun` using `-cp` or `-classpath` arguments. When omitted, it defaults to `['.']` (the current working directory).
+
+### System & External Command Requirements
+
+- **External `unzip` command**: A standard `unzip` utility is **required** to support `jar file classpath entry` classloading. It must be accessible in your system `PATH`.
 
 ---
 

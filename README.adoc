@@ -77,12 +77,32 @@ javac HelloWorld.java
 :JavimRun -cp bin:lib HelloWorld
 ----
 
+== Configuration
+
+g:javim_cache_dir::
+  The root directory used for extracting and caching JAR files. If unset, defaults to `~/.cache/javim`.
+
 == Limitations & Compatibility
 
-`javim` is a lightweight, pure Vim Script interpreter designed strictly around the Java Virtual Machine Specification, Java SE 8 Edition (JVMS SE 8). Therefore, many modern or advanced Java deployment and packaging capabilities are explicitly **unsupported**:
+`javim` is a lightweight, pure Vim Script interpreter designed strictly around the Java Virtual Machine Specification, Java SE 8 Edition (JVMS SE 8).
 
-Project Jigsaw (Java 9+ Module System):: Explicitly **unsupported**. Modular directory structure and module-path command-line flags (`--module-path` or `-p`) are completely ignored. All class files must reside on a flat classpath structure.
-JAR Manifest (`Class-Path` header):: Explicitly **unsupported**. JAR execution with `java -jar` or classpath resolution based on the `Class-Path` configuration inside a JAR's `META-INF/MANIFEST.MF` is not supported.
+=== Requirements
+
+External `unzip` command::
+  A standard `unzip` utility must be installed and accessible in your system `PATH`. This is a mandatory requirement to support `jar file classpath entry` classloading.
+
+=== Supported Classpath Features
+
+The classloader parses custom classpath configurations passed via `-cp` or `-classpath` according to the following support matrix:
+
+Directory (`directory`):: Supported. Looks up `.class` files sequentially under specified directory structures (separated by `:` on macOS/Linux, `;` on Windows).
+JAR file classpath entry (`jar file classpath entry`):: Supported via extraction cache. Direct `.jar` file paths can be specified. `javim` extracts the JAR archive under your configured cache directory (using mtime-based hashing to handle updates) using the external `unzip` command, and loads classes from the extracted directory.
+Wildcard (`wildcard`):: Supported. Wildcard patterns (e.g. `lib/*`) are expanded into matching file paths using Vim's built-in `glob()` function at startup. Note that unlike standard JREs (which strictly match only `.jar`/`.JAR` files under the specified directory), `javim` delegates parsing to Vim's native globbing engine and then filters the results to keep only valid directories and `.jar` files.
+
+=== Unsupported Packaging Features
+
+Project Jigsaw (Java 9+ Module System):: Explicitly **unsupported**. Modular directory structure and module-path command-line flags (`--module-path` or `-p`) are completely ignored.
+JAR Manifest (`Class-Path` header):: Explicitly **unsupported**. Automatic resolution and dependent loading of paths listed in the `Class-Path` header inside a JAR's `META-INF/MANIFEST.MF` is not supported. Only classes contained directly inside the specified JAR are loaded.
 
 == Troubleshooting
 
