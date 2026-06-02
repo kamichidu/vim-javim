@@ -103,3 +103,21 @@ When updating status fields, always use one of these six unified terms:
 
 #### 3. Test Column Verification
 In `docs/OPCODES.md` and `docs/API.md`, the `test` column must specify precisely which test suite class verifies the item (e.g., `pass(HelloWorld)`, `pass(MathTest)`, `pass(Fibonacci)`). If no specific automated test executes the path, it must be marked as `none` (or `n/a` for reserved/out-of-scope items). Avoid vague or generic `pass` claims.
+
+### Guidelines for README and Help File Updates
+
+To maintain consistency and high-signal quality across user-facing documentation, strictly adhere to the following rules when modifying `README.adoc` or `doc/javim.txt`:
+
+#### 1. Factual and Objective Tone
+* All descriptions must be completely dispassionate and state pure technical facts. Avoid marketing or buzzword adjectives (e.g., use "minimal implementation" instead of "lightweight").
+* No conversational justifications or notes are allowed in the benchmark results section. Only present raw data, the execution environment specifications, and factual comparison tables.
+
+#### 2. Documentation Partitioning
+* **`README.adoc` (Web / Entrypoint)**: Contains general setup guides, installation instructions, user configuration, troubleshooting, and compatibility/platform exclusions (e.g., explicitly stating that Neovim is unsupported).
+* **`doc/javim.txt` (Vim Help)**: Remains purely focused on native Vim usage and command details. Exclude mentions of non-Vim compatibility details (such as Neovim exclusions) to keep the native help clean and focused for Vim users.
+* **Deep-Dive Specifications**: Keep detailed compliance specs strictly inside the `docs/` folder, and link to them directly from both `README.adoc` and `doc/javim.txt` rather than duplicating lists of features or API methods.
+
+#### 3. Structured Page Layout
+* Promoted sections (top of `README.adoc`): `Features`, `Installation`, `Usage`, `Troubleshooting`, `Configuration`, and `Benchmark Results`.
+* Developer sections (bottom of `README.adoc`): `Specifications & Compatibility`, `Internal Architecture & Implementation`, `Limitations`, and `Development & Automated Testing`.
+* The `Directory Structure` diagram inside `README.adoc` must strictly stop at the folder level. Do not list individual files or deep file trees in the README's structure block.
