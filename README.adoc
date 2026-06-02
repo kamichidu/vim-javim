@@ -1,48 +1,37 @@
-= javim: Vim Script JVM (Vim 8)
+= javim: Pure Vim Script Java Virtual Machine (JVM)
 
-`javim` is a lightweight, pure Vim Script implementation of a Java Virtual Machine (JVM). It runs on Vim 8+ (excluding Neovim) and executes Java `.class` bytecode files directly inside your Vim session.
+`javim` is a minimal implementation of a Java Virtual Machine (JVM) written in pure Vim Script. It runs on Vim 8+ (excluding Neovim) and executes Java `.class` bytecode files inside Vim without requiring an external Java Runtime Environment (JRE) at runtime.
 
 == Features
 
-* **Pure Vim Script Implementation:** Built using native Vim 8 data structures, including `Blob` for high-performance class file decoding and `Dictionary` objects for the JVM heap and stack frames.
-* **Vim-Native Standard Library (`rt/`):** Key classes like `java.lang.Object`, `java.lang.String`, `java.lang.System`, and `java.io.PrintStream` are implemented natively in Vim Script, eliminating the need to bundle a bulky external `rt.jar`.
-* **Dynamic Method Dispatch:** Supports inheritance and interfaces with runtime resolution (`invokevirtual`, `invokespecial`, `invokestatic`).
-* **Vim 8 Exclusive Compatibility:** Leverages standard Vim 8 binary blobs and test assertions.
+* *Run Java with Only Vim:* Execute Java bytecode directly inside Vim without needing an external JVM or JRE at runtime.
+* *Vim-Native Standard Library (`rt/`):* Core standard classes like `java.lang.Object`, `java.lang.String`, `java.lang.System`, and `java.io.PrintStream` are mocked natively in Vim Script, bypassing the need for a bulky compiled `rt.jar` (see link:docs/API.md[API.md] for the complete support matrix).
+* *Pure Vim Script Implementation:* Leverages standard Vim 8 binary `Blob` data structures for high-performance class file decoding, and `Dictionary` objects for the JVM heap and stack frames.
+* *Dynamic Method Dispatch:* Full runtime method resolution support for inheritance and interfaces (`invokevirtual`, `invokespecial`, `invokestatic`).
+* *Vim 8 Exclusive:* Tailored to standard Vim 8 specifications with robust binary blob parsing and built-in test assertions.
 
-== Directory Structure
+== Installation
 
-[source,text]
+You can install `javim` using your favorite Vim plugin manager.
+
+Using *vim-plug*:
+[source,vim]
 ----
-/Users/e-sekito/local/src/github.com/kamichidu/vim-jre/
-|-- autoload/
-|   `-- javim/
-|       |-- rt/                 - Vim Script implementations of java.lang & java.io
-|       |   |-- java/
-|       |   |   |-- lang/
-|       |   |   |   |-- Object.vim
-|       |   |   |   |-- String.vim
-|       |   |   |   |-- System.vim
-|       |   |   |   `-- StringBuilder.vim
-|       |   |   `-- io/
-|       |   |       `-- PrintStream.vim
-|       |-- classfile.vim       - Decodes .class files into Vim Script dictionaries
-|       |-- instructions.vim    - JVM opcode handlers
-|       |-- interpreter.vim     - JVM execution loop & runtime state (stack/heap)
-|       `-- native.vim          - Core bridge for native method handling
-|-- doc/
-|   `-- javim.txt               - Vim help documentation
-|-- plugin/
-|   `-- javim.vim               - Command definition :JavimRun
-|-- test/
-|   |-- run_tests.vim           - Main test runner using Vim 8 assertions
-|   |-- suite/
-|   |   |-- classfile_test.vim  - Decoding unit tests
-|   |   `-- interpreter_test.vim- Execution unit tests
-|   `-- classes/                - Test-only Java source and precompiled .class files
-|       |-- HelloWorld.java
-|       `-- HelloWorld.class
-`-- README.adoc                 - Project specification (this file)
+Plug 'kamichidu/vim-javim'
 ----
+
+Using Vim's native package manager:
+[source,bash]
+----
+mkdir -p ~/.vim/pack/plugins/start
+cd ~/.vim/pack/plugins/start
+git clone https://github.com/kamichidu/vim-javim.git
+----
+
+=== Requirements
+
+External `unzip` command::
+  Only required if you want to load classes from `.jar` files in your classpath. Otherwise, a standard Vim 8+ installation is all you need to execute compiled `.class` files.
 
 == Usage
 
@@ -59,7 +48,7 @@ public class HelloWorld {
 }
 ----
 
-. Compile the class to bytecode using the standard Java compiler:
+. Compile the class to Java bytecode using your local compiler:
 +
 [source,bash]
 ----
@@ -77,37 +66,166 @@ javac HelloWorld.java
 :JavimRun -cp bin:lib HelloWorld
 ----
 
+== Troubleshooting
+
+ClassNotFoundException:: Ensure that the directory containing your compiled `.class` files is included in the JVM classpath (by default, it searches the current directory).
+NullPointerException:: Occurs when attempting to perform an operation on a null object reference.
+Unsupported opcode:: A specific JVM bytecode instruction is not yet implemented in `instructions.vim`. Please report this with the opcode hex representation.
+
 == Configuration
 
 g:javim_cache_dir::
   The root directory used for extracting and caching JAR files. If unset, defaults to `~/.cache/javim`.
 
-== Limitations & Compatibility
+== Benchmark Results
 
-`javim` is a lightweight, pure Vim Script interpreter designed strictly around the Java Virtual Machine Specification, Java SE 8 Edition (JVMS SE 8).
+=== Execution Environment
 
-=== Requirements
+[cols="1,2", options="header"]
+|===
+| Hardware/Software Component | Specification
 
-External `unzip` command::
-  A standard `unzip` utility must be installed and accessible in your system `PATH`. This is a mandatory requirement to support `jar file classpath entry` classloading.
+| CPU
+| Apple M3 (arm64)
 
-=== Supported Classpath Features
+| Operating System
+| macOS
+
+| Vim Version
+| Vim 9.1.2100
+
+| Java Runtime
+| Java 25.0.2
+|===
+
+=== javim Benchmark Results
+
+[source,text]
+----
+============================================================
+javim Benchmark Results (Regression Detection)
+============================================================
+Timestamp:   2026-06-02 22:53:50
+Vim Version: VIM - Vi IMproved 9.1 (2024 Jan 02, compiled Jan 20 2026 19:40:35)
+OS:          macOS
+============================================================
+1. Classfile Parse:                     0.276285s (100 iterations, avg: 0.002763s)
+2. Simple Loop Program Execution:       14.056742s (3 iterations, avg: 4.685581s)
+3. External Method Entry (No-Args):     3.109753s (10000 iterations, avg: 0.000311s)
+4. Internal Static Method Invocation Loop: 31.624686s (3 iterations, avg: 10.541562s)
+5. Recursive Method Invocation:         30.068989s (50 iterations, avg: 0.601380s)
+6. Classpath Directory Load:            0.087062s (1000 iterations, avg: 0.000087s)
+7. JAR Classpath Cold Extraction:       0.026748s (1 iteration)
+8. JAR Classpath Cache Hit:             0.016286s (100 iterations, avg: 0.000163s)
+============================================================
+----
+
+=== Native Java SE (HotSpot JDK 25) Reference Results
+
+[source,text]
+----
+============================================================
+Java HotSpot(TM) 64-Bit Server VM (build 25.0.2+10-LTS-69)
+============================================================
+1. Simple Loop Program Execution:       0.000560s (3 iterations, avg: 0.000187s)
+2. Internal Static Method Invocation:   0.000328s (3 iterations, avg: 0.000109s)
+3. Recursive Method Invocation:         0.000545s (50 iterations, avg: 0.000011s)
+============================================================
+----
+
+=== Performance Comparison
+
+[cols="2,2,2,2", options="header"]
+|===
+| Benchmark Program | javim (Vim Script JVM) | Native Java (HotSpot JIT) | Overhead Ratio
+
+| Simple Loop (`LoopBenchmark.run`)
+| 14.057s (avg 4.686s)
+| 0.00056s (avg 0.00019s)
+| ~25,000x slower
+
+| Internal Loop (`LoopBenchmark.callAddLoop`)
+| 31.625s (avg 10.542s)
+| 0.00033s (avg 0.00011s)
+| ~96,000x slower
+
+| Recursive (`Fibonacci.fib`)
+| 30.069s (avg 0.601s)
+| 0.00055s (avg 0.00001s)
+| ~55,000x slower
+|===
+
+== Specifications & Compatibility
+
+For deep-dive technical status on compliance, instructions, and standard APIs, refer directly to the hand-managed files in the `docs/` directory:
+
+link:docs/JVMS.md[JVMS.md (JVMS SE 8 Compatibility Status)]::
+  Details implementation compliance against the *Java Virtual Machine Specification, Java SE 8 Edition*. Explains constant pool support, major version compliance, and out-of-scope behaviors (like JIT compilation, GC, and native thread scheduling).
+
+link:docs/OPCODES.md[OPCODES.md (JVM Opcode Compatibility Status)]::
+  A complete mapping of the entire 1-byte opcode space (`0x00` through `0xff`). Lists supported status (supported, partial, unsupported) and precise automated test references for each instruction.
+
+link:docs/API.md[API.md (Java SE API Stub Support Status)]::
+  A compatibility matrix listing supported mock stubs and method overloads for standard library classes (`java.lang.Object`, `java.lang.String`, `java.lang.System`, `java.io.PrintStream`, etc.) mapped natively to Vim Script.
+
+== Internal Architecture & Implementation
+
+`javim` interprets compiled class files through a modular design written entirely in Vim Script.
+
+=== Module Components
+
+Decoder (`autoload/javim/classfile.vim`)::
+  Reads Java bytecode `.class` files as a binary `Blob` using Vim's native `readfile(..., 'B')` and parses constant pools, interfaces, fields, methods, and bytecode attributes.
+Interpreter (`autoload/javim/interpreter.vim`)::
+  Manages JVM stack frames, heap allocation, static fields, and the main execution loop.
+Instruction Set (`autoload/javim/instructions.vim`)::
+  Implements standard JVM opcodes (arithmetic, object initialization, loops, branch jumps, static and dynamic method dispatch). For supported instructions, see link:docs/OPCODES.md[OPCODES.md].
+Vim-Native Runtime (`autoload/javim/rt/`)::
+  Bypasses the need for real compiled standard libraries (`rt.jar`). Standard runtime classes are mocked natively in Vim Script (see link:docs/API.md[API.md]).
+
+=== Directory Structure
+
+[source,text]
+----
+vim-javim/
+|-- autoload/
+|   `-- javim/
+|       `-- rt/         - Mocked Java SE standard runtime classes (java.lang, java.io)
+|-- doc/                - Vim-native help documentation (:help javim)
+|-- docs/               - Technical compliance and spec deep-dives (JVMS, OPCODES, API)
+|-- plugin/             - Command definitions (exposing :JavimRun)
+`-- test/               - Test suites, performance benchmarks, and Java test targets
+----
+
+=== Classpath Resolution Details
 
 The classloader parses custom classpath configurations passed via `-cp` or `-classpath` according to the following support matrix:
 
 Directory (`directory`):: Supported. Looks up `.class` files sequentially under specified directory structures (separated by `:` on macOS/Linux, `;` on Windows).
-JAR file classpath entry (`jar file classpath entry`):: Supported via extraction cache. Direct `.jar` file paths can be specified. `javim` extracts the JAR archive under your configured cache directory (using mtime-based hashing to handle updates) using the external `unzip` command, and loads classes from the extracted directory.
-Wildcard (`wildcard`):: Supported. Wildcard patterns (e.g. `lib/*`) are expanded into matching file paths using Vim's built-in `glob()` function at startup. Note that unlike standard JREs (which strictly match only `.jar`/`.JAR` files under the specified directory), `javim` delegates parsing to Vim's native globbing engine and then filters the results to keep only valid directories and `.jar` files.
+JAR file classpath entry (`jar file`):: Supported via extraction cache. Direct `.jar` file paths can be specified. `javim` extracts the JAR archive under your configured cache directory (using mtime-based hashing to handle updates) using the external `unzip` command, and loads classes from the extracted directory.
+Wildcard (`wildcard`):: Supported. Wildcard patterns (e.g., `lib/*`) are expanded into matching file paths using Vim's built-in `glob()` function at startup. Note that unlike standard JREs (which strictly match only `.jar`/`.JAR` files under the specified directory), `javim` delegates parsing to Vim's native globbing engine and then filters the results to keep only valid directories and `.jar` files.
 
-=== Unsupported Packaging Features
+== Limitations & Compatibility
 
-Project Jigsaw (Java 9+ Module System):: Explicitly **unsupported**. Modular directory structure and module-path command-line flags (`--module-path` or `-p`) are completely ignored.
-JAR Manifest (`Class-Path` header):: Explicitly **unsupported**. Automatic resolution and dependent loading of paths listed in the `Class-Path` header inside a JAR's `META-INF/MANIFEST.MF` is not supported. Only classes contained directly inside the specified JAR are loaded.
+Besides core JVM spec support (detailed in link:docs/JVMS.md[JVMS.md]), packaging and loading limitations include:
 
-== Troubleshooting
+=== Unsupported Features
 
-If you encounter class-loading or runtime errors:
+Project Jigsaw (Java 9+ Module System):: Explicitly *unsupported*. Modular directory structure and module-path command-line flags (`--module-path` or `-p`) are completely ignored.
+JAR Manifest (`Class-Path` header):: Explicitly *unsupported*. Automatic resolution and dependent loading of paths listed in the `Class-Path` header inside a JAR's `META-INF/MANIFEST.MF` is not supported. Only classes contained directly inside the specified JAR are loaded.
 
-ClassNotFoundException:: Ensure that the directory containing your compiled `.class` files is included in the JVM classpath (by default, it searches the current directory).
-NullPointerException:: Occurs when attempting to perform an operation on a null object reference.
-Unsupported opcode:: A specific JVM bytecode instruction is not yet implemented in `instructions.vim`. Please report this with the opcode hex representation.
+== Development & Automated Testing
+
+`javim` contains automated unit and regression tests.
+
+To run the full test suite headless:
+[source,bash]
+----
+vim -V1 -u NONE -es -S test/run_tests.vim
+----
+
+To run the regression performance benchmarks:
+[source,bash]
+----
+vim -V1 -u NONE -es -S test/run_benchmarks.vim
+----
