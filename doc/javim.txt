@@ -1,0 +1,25 @@
+*javim.txt*   Vim Script JVM Interpreter
+
+                                 JAVIM                                *javim*
+
+A lightweight JVM interpreter implemented entirely in Vim Script for Vim 8.
+
+==============================================================================
+1. INTRODUCTION                                               *javim-intro*
+
+`javim` is a lightweight, pure Vim Script JVM interpreter designed for Vim 8+.
+It reads standard compiled Java bytecode `.class` files, parses their constants,
+fields, interfaces, and bytecode, and executes them in an internal interpreter loop.
+
+==============================================================================
+2. COMMANDS                                                *javim-commands*
+
+:JavimRun {class_name} [args...]
+                        Executes the main method of the specified Java class
+                        from the current directory or classpath.
+                        Example:
+>
+                        :JavimRun test.classes.HelloWorld
+<
+==============================================================================
+vim:tw=78:ts=8:ft=help:norl:

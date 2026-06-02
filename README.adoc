@@ -1,0 +1,82 @@
+= javim: Vim Script JVM (Vim 8)
+
+`javim` is a lightweight, pure Vim Script implementation of a Java Virtual Machine (JVM). It runs on Vim 8+ (excluding Neovim) and executes Java `.class` bytecode files directly inside your Vim session.
+
+== Features
+
+* **Pure Vim Script Implementation:** Built using native Vim 8 data structures, including `Blob` for high-performance class file decoding and `Dictionary` objects for the JVM heap and stack frames.
+* **Vim-Native Standard Library (`rt/`):** Key classes like `java.lang.Object`, `java.lang.String`, `java.lang.System`, and `java.io.PrintStream` are implemented natively in Vim Script, eliminating the need to bundle a bulky external `rt.jar`.
+* **Dynamic Method Dispatch:** Supports inheritance and interfaces with runtime resolution (`invokevirtual`, `invokespecial`, `invokestatic`).
+* **Vim 8 Exclusive Compatibility:** Leverages standard Vim 8 binary blobs and test assertions.
+
+== Directory Structure
+
+[source,text]
+----
+/Users/e-sekito/local/src/github.com/kamichidu/vim-jre/
+|-- autoload/
+|   `-- javim/
+|       |-- rt/                 - Vim Script implementations of java.lang & java.io
+|       |   |-- java/
+|       |   |   |-- lang/
+|       |   |   |   |-- Object.vim
+|       |   |   |   |-- String.vim
+|       |   |   |   |-- System.vim
+|       |   |   |   `-- StringBuilder.vim
+|       |   |   `-- io/
+|       |   |       `-- PrintStream.vim
+|       |-- classfile.vim       - Decodes .class files into Vim Script dictionaries
+|       |-- instructions.vim    - JVM opcode handlers
+|       |-- interpreter.vim     - JVM execution loop & runtime state (stack/heap)
+|       `-- native.vim          - Core bridge for native method handling
+|-- doc/
+|   `-- javim.txt               - Vim help documentation
+|-- plugin/
+|   `-- javim.vim               - Command definition :JavimRun
+|-- test/
+|   |-- run_tests.vim           - Main test runner using Vim 8 assertions
+|   |-- suite/
+|   |   |-- classfile_test.vim  - Decoding unit tests
+|   |   `-- interpreter_test.vim- Execution unit tests
+|   `-- classes/                - Test-only Java source and precompiled .class files
+|       |-- HelloWorld.java
+|       `-- HelloWorld.class
+`-- README.adoc                 - Project specification (this file)
+----
+
+== Usage
+
+To compile and run your Java classes inside Vim:
+
+. Write your Java class (e.g., `HelloWorld.java`):
++
+[source,java]
+----
+public class HelloWorld {
+    public static void main(String[] args) {
+        System.out.println("Hello, World!");
+    }
+}
+----
+
+. Compile the class to bytecode using the standard Java compiler:
++
+[source,bash]
+----
+javac HelloWorld.java
+----
+
+. Open Vim and execute the class using the `:JavimRun` command:
++
+[source,vim]
+----
+:JavimRun HelloWorld
+----
+
+== Troubleshooting
+
+If you encounter class-loading or runtime errors:
+
+ClassNotFoundException:: Ensure that the directory containing your compiled `.class` files is included in the JVM classpath (by default, it searches the current directory).
+NullPointerException:: Occurs when attempting to perform an operation on a null object reference.
+Unsupported opcode:: A specific JVM bytecode instruction is not yet implemented in `instructions.vim`. Please report this with the opcode hex representation.
