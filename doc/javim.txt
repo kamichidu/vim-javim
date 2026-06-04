@@ -85,7 +85,7 @@ documents under the `docs/` directory of the plugin repository:
 - docs/OPCODES.md:
   Verification status of all 1-byte opcodes.
 - docs/API.md:
-  Support matrix of native Java SE standard library mocks.
+  Support matrix of built-in Java SE standard library support.
 
 ==============================================================================
 vim:tw=78:ts=8:ft=help:norl:

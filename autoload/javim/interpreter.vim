@@ -35,7 +35,7 @@ function! javim#interpreter#load_class(class_name, vm_state) abort
     return l:class_dict
   endif
 
-  " 1. Search in native runtime mocks under autoload/javim/rt/
+  " 1. Search in built-in runtime support under autoload/javim/rt/
   let l:rt_func = 'javim#rt#' . substitute(l:normalized, '/', '#', 'g') . '#get'
   try
     let l:class_dict = call(l:rt_func, [])
@@ -43,7 +43,7 @@ function! javim#interpreter#load_class(class_name, vm_state) abort
     call s:init_static_fields(l:normalized, l:class_dict, a:vm_state)
     return l:class_dict
   catch /^Vim\%((\a\+)\)\=:E117/
-    " Native mock function not found, proceed to classpath
+    " Built-in runtime initializer function not found, proceed to classpath
   endtry
 
   " 2. Search in physical classpath

@@ -9,7 +9,7 @@ The JVM is designed as a modular interpreter running entirely inside Vim 8 (excl
 1. **Bytecode Decoder (`autoload/javim/classfile.vim`):** Reads Java bytecode `.class` files as a binary `Blob` using Vim 8 `readfile(..., 'B')` and parses constant pools, interfaces, fields, methods, and the `Code` attribute.
 2. **Interpreter & Predecoder (`autoload/javim/interpreter.vim`):** Manages stack frames, JVM heap allocation, static fields, and method invocations. To ensure maximum execution speed, methods are **predecoded** once prior to execution. The original bytecode is converted into a non-destructive `instructions` stream object array, with jump targets pre-resolved via a `pc_to_ip` map. It also dynamically injects Superinstructions using an internal extended opcode space (`>= 0x10000`).
 3. **Instruction Set (`autoload/javim/instructions.vim`):** Implements standard JVMS opcodes (`0x00` to `0xff`). The execution loop operates over the predecoded instruction index (`ip`) rather than sequential byte-reading.
-4. **Vim-Native Standard Library (`autoload/javim/rt/`):** Bypasses the need for real compiled `rt.jar` class files. Standard Java runtime classes (like `java.lang.Object`, `java.lang.String`, `java.lang.System`, and `java.io.PrintStream`) are mocked directly in Vim Script, exposing pre-configured `ClassDict` structures with native Vim callback mappings.
+4. **Vim-Native Standard Library (`autoload/javim/rt/`):** Bypasses the need for real compiled `rt.jar` class files. Standard Java runtime classes (like `java.lang.Object`, `java.lang.String`, `java.lang.System`, and `java.io.PrintStream`) are implemented directly in Vim Script as built-in runtime support, exposing pre-configured `ClassDict` structures with native Vim callback mappings.
 5. **Execution Entry Point (`autoload/javim.vim`):** Exposes the public `javim#run(...)` API, which parses runtime parameters (such as classpath override `-cp`), configures an isolated VM state dictionary, maps execution arguments to native JVM String array references, and executes the target class `main` method. The `:JavimRun` command defined in `plugin/javim.vim` acts as a lightweight wrapper delegating directly to this function.
 
 ---
@@ -83,11 +83,11 @@ To maintain a clear and accurate understanding of the interpreter's compliance s
 
 1. **`docs/JVMS.md`**: Tracks compatibility against the *Java Virtual Machine Specification, Java SE 8 Edition (JVMS SE 8)*, covering binary class formats, constant pool tags, attributes, descriptors, runtime areas, stacks, and method invocation boundaries.
 2. **`docs/OPCODES.md`**: A manually updated listing of the entire 1-byte opcode space (`0x00` to `0xff`).
-3. **`docs/API.md`**: A compatibility matrix tracking the native stubs for the standard library (`java.lang.Object`, `java.lang.String`, `java.lang.System`, `java.io.PrintStream`).
+3. **`docs/API.md`**: A compatibility matrix tracking the built-in runtime support for the standard library (`java.lang.Object`, `java.lang.String`, `java.lang.System`, `java.io.PrintStream`).
 
 ### Guidelines for Document Updates (Hand-Managed)
 
-Every time an opcode, classfile parsing feature, or Java SE API stub method is implemented, modified, or verified, the corresponding document must be updated by hand according to these rules:
+Every time an opcode, classfile parsing feature, or Java SE API built-in runtime method is implemented, modified, or verified, the corresponding document must be updated by hand according to these rules:
 
 #### 1. Ground Truth
 * **Implementation Ground Truth**: The actual code in the interpreter (`autoload/javim/interpreter.vim` and `autoload/javim/instructions.vim`) is the absolute source of truth for support status.

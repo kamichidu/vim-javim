@@ -15,7 +15,7 @@ The following JVM execution mechanisms are implementation-dependent and are **no
 - **HotSpot-specific features**: Optimization tactics, intrinsic compilation, and serviceability agents are out of scope.
 
 ### Standard Class Library (Java SE API)
-Java SE Standard API classes (such as `java.lang.String`, `java.lang.System`, `java.io.PrintStream`) are part of the Java SE Platform API Specification rather than the JVMS SE 8 Specification. Consequently, their stubs and support statuses are managed separately in `docs/API.md`.
+Java SE Standard API classes (such as `java.lang.String`, `java.lang.System`, `java.io.PrintStream`) are part of the Java SE Platform API Specification rather than the JVMS SE 8 Specification. Consequently, their built-in runtime implementations and support statuses are managed separately in `docs/API.md`.
 
 ---
 
@@ -123,7 +123,7 @@ Method execution routing based on bytecode instructions.
 
 The lifecycle of class definitions inside the virtual machine.
 
-- **Class Loading**: `supported`. Dynamically created array types (`[L...;`), native runtime stubs from `autoload/javim/rt/`, or physical class files from search classpath directories are successfully loaded.
+- **Class Loading**: `supported`. Dynamically created array types (`[L...;`), built-in runtime classes from `autoload/javim/rt/`, or physical class files from search classpath directories are successfully loaded.
 - **Linking**: `partial`. Bypasses formal binary verification. Initializes static fields with their default JVM representation (e.g. `0` for `I`, `{'null': 1}` for objects) during loading.
 - **Initialization**: `supported`. Automatically runs class initializers (`<clinit>()V`) in isolation upon class loading.
 

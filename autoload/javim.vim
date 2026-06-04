@@ -43,7 +43,7 @@ function! javim#run(...) abort
     call add(l:arg_refs, javim#interpreter#new_string(l:a, l:vm_state))
   endfor
 
-  " Mock JVM array for arguments
+  " Create JVM array for arguments
   let l:array_ref = javim#interpreter#new_object('[Ljava/lang/String;', l:vm_state)
   let l:vm_state.heap[l:array_ref].__fields__['_elements'] = l:arg_refs
 

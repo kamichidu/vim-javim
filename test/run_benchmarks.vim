@@ -23,7 +23,7 @@ call add(s:results, '===========================================================
 
 " Helper function to load a class with localized &verbose = 0.
 " This prevents Vim from printing "not found in 'runtimepath'" warning logs
-" on stderr when searching for native runtime stubs (which is normal and caught internally).
+" on stderr when searching for built-in runtime support (which is normal and caught internally).
 " It avoids using global silent! which could swallow genuine errors.
 function! s:load_class_silently(class_name, vm_state) abort
   let l:save_verbose = &verbose

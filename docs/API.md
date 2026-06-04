@@ -1,6 +1,6 @@
-# Java SE API Stub Support Status
+# Java SE API Built-In Runtime Support Status
 
-This document tracks the support status of the built-in mock stubs for the **Java SE Standard API** inside the `javim` interpreter. These stubs are implemented as native Vim script extensions under `autoload/javim/rt/`.
+This document tracks the support status of the built-in runtime support for the **Java SE Standard API** inside the `javim` interpreter. These implementations are provided as native Vim script extensions under `autoload/javim/rt/`.
 
 ---
 
@@ -68,7 +68,7 @@ This document tracks the support status of the built-in mock stubs for the **Jav
 | Method / Field | Status | Test | Note |
 | :--- | :--- | :---: | :--- |
 | `out` (Static Field) | `supported` | `pass` | Type `Ljava/io/PrintStream;`. Native static print output stream |
-| `<clinit>()V` (Static Initializer) | `supported` | `pass` | Allocates mock `PrintStream` and binds it to `System.out` |
+| `<clinit>()V` (Static Initializer) | `supported` | `pass` | Allocates built-in `PrintStream` and binds it to `System.out` |
 | `currentTimeMillis()J` | `unsupported` | `none` | Returns 64-bit current system epoch time |
 | `arraycopy(...)` | `unsupported` | `none` | Fast memory copying of array buffers |
 
@@ -80,7 +80,7 @@ This document tracks the support status of the built-in mock stubs for the **Jav
 
 | Method / Field | Status | Test | Note |
 | :--- | :--- | :---: | :--- |
-| `<init>()V` (Constructor) | `supported` | `pass` | Standard stub constructor |
+| `<init>()V` (Constructor) | `supported` | `pass` | Standard built-in constructor |
 | `println(Ljava/lang/String;)V` | `supported` | `pass` | Outputs string representation to Vim and appends to `vm_state.stdout` |
 | `println(I)V` | `supported` | `pass` | Outputs integer representation to Vim and appends to `vm_state.stdout` |
 | `print(...)` overloads | `unsupported` | `none` | Print without newlines is unsupported |

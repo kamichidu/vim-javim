@@ -5,7 +5,7 @@
 == Features
 
 * *Run Java with Only Vim:* Execute Java bytecode directly inside Vim without needing an external JVM or JRE at runtime.
-* *Vim-Native Standard Library (`rt/`):* Core standard classes like `java.lang.Object`, `java.lang.String`, `java.lang.System`, and `java.io.PrintStream` are mocked natively in Vim Script, bypassing the need for a bulky compiled `rt.jar` (see link:docs/API.md[API.md] for the complete support matrix).
+* *Vim-Native Standard Library (`rt/`):* Core standard classes like `java.lang.Object`, `java.lang.String`, `java.lang.System`, and `java.io.PrintStream` are provided as built-in runtime classes in Vim Script, bypassing the need for a bulky compiled `rt.jar` (see link:docs/API.md[API.md] for the complete support matrix).
 * *Pure Vim Script Implementation:* Leverages standard Vim 8 binary `Blob` data structures for high-performance class file decoding, and `Dictionary` objects for the JVM heap and stack frames.
 * *Dynamic Method Dispatch:* Full runtime method resolution support for inheritance and interfaces (`invokevirtual`, `invokespecial`, `invokestatic`).
 * *Vim 8 Exclusive:* Tailored to standard Vim 8 specifications with robust binary blob parsing and built-in test assertions.
@@ -165,8 +165,8 @@ link:docs/JVMS.md[JVMS.md (JVMS SE 8 Compatibility Status)]::
 link:docs/OPCODES.md[OPCODES.md (JVM Opcode Compatibility Status)]::
   A complete mapping of the entire 1-byte opcode space (`0x00` through `0xff`). Lists supported status (supported, partial, unsupported) and precise automated test references for each instruction.
 
-link:docs/API.md[API.md (Java SE API Stub Support Status)]::
-  A compatibility matrix listing supported mock stubs and method overloads for standard library classes (`java.lang.Object`, `java.lang.String`, `java.lang.System`, `java.io.PrintStream`, etc.) mapped natively to Vim Script.
+link:docs/API.md[API.md (Java SE API Built-In Runtime Support Status)]::
+  A compatibility matrix listing built-in runtime support and method overloads for standard library classes (`java.lang.Object`, `java.lang.String`, `java.lang.System`, `java.io.PrintStream`, etc.) mapped natively to Vim Script.
 
 == Internal Architecture & Implementation
 
@@ -181,7 +181,7 @@ Interpreter (`autoload/javim/interpreter.vim`)::
 Instruction Set (`autoload/javim/instructions.vim`)::
   Implements standard JVM opcodes (arithmetic, object initialization, loops, branch jumps, static and dynamic method dispatch). For supported instructions, see link:docs/OPCODES.md[OPCODES.md].
 Vim-Native Runtime (`autoload/javim/rt/`)::
-  Bypasses the need for real compiled standard libraries (`rt.jar`). Standard runtime classes are mocked natively in Vim Script (see link:docs/API.md[API.md]).
+  Bypasses the need for real compiled standard libraries (`rt.jar`). Standard runtime classes are provided as built-in runtime classes in Vim Script (see link:docs/API.md[API.md]).
 
 === Directory Structure
 
@@ -190,7 +190,7 @@ Vim-Native Runtime (`autoload/javim/rt/`)::
 vim-javim/
 |-- autoload/
 |   `-- javim/
-|       `-- rt/         - Mocked Java SE standard runtime classes (java.lang, java.io)
+|       `-- rt/         - Built-in Java SE standard runtime support classes (java.lang, java.io)
 |-- doc/                - Vim-native help documentation (:help javim)
 |-- docs/               - Technical compliance and spec deep-dives (JVMS, OPCODES, API)
 |-- plugin/             - Command definitions (exposing :JavimRun)
